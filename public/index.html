@@ -11,18 +11,14 @@
     }
     *{box-sizing:border-box}
     html,body{height:100%;margin:0}
-    body {
-  color: var(--text);
-  font-family: system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial;
-  background: linear-gradient(rgba(14,35,65,0.65), rgba(14,35,65,0.65)),
-              url("/assets/background.png") center/cover no-repeat fixed;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0;
-  height: 100%;
-}
-
+    body{
+      color:var(--text);
+      font-family: system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial;
+      background: linear-gradient(rgba(14,35,65,0.65), rgba(14,35,65,0.65)),
+                  url("/assets/background.png") center/cover no-repeat fixed;
+      display:flex; flex-direction:column; align-items:center; justify-content:flex-start;
+      padding-top:40px;
+    }
     .wrap{
       width:min(960px,92%);
       text-align:center;
@@ -32,6 +28,7 @@
       padding:32px 22px;
       backdrop-filter: blur(2px);
       box-shadow: 0 10px 40px rgba(0,0,0,.35);
+      margin-bottom:40px;
     }
     h1{margin:0 0 8px; font-size:clamp(28px,6vw,56px); color:var(--gold)}
     p{margin:8px auto 18px; max-width:720px; font-size:clamp(16px,2.8vw,20px)}
@@ -43,6 +40,16 @@
     }
     .cta:active{ transform: translateY(2px); box-shadow: 0 4px 0 #caa02b; }
     .sub{opacity:.85; font-size:14px; margin-top:8px}
+    .twitter-btn {
+      display:inline-block;
+      margin-top:8px;
+      background:var(--blue);
+      color:var(--text);
+      padding:8px 14px;
+      border-radius:8px;
+      font-weight:600;
+      text-decoration:none;
+    }
   </style>
 </head>
 <body>
@@ -51,7 +58,23 @@
     <p>WIPE away your debt in our toilet-themed crypto mini-game.<br/>
        Can you catch the gains before they hit the bowl?</p>
     <a class="cta" href="/game">▶ Play Now</a>
-    <div class="sub">Powered by the WIPE community • #WIPEcoin</div>
+    <div class="sub">
+      Powered by the WIPE community • #WIPEcoin  
+      <br>
+      <a class="twitter-btn" href="https://twitter.com/WIPE_it_UP" target="_blank">🐦 Follow us on Twitter</a>
+    </div>
   </main>
+
+  <!-- Twitter Feed Embed -->
+  <div class="wrap" style="max-width:600px;">
+    <a class="twitter-timeline" 
+       data-width="500" 
+       data-height="600" 
+       data-theme="dark" 
+       href="https://twitter.com/WIPE_it_UP?ref_src=twsrc%5Etfw">
+      Tweets by WIPE_it_UP
+    </a> 
+    <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+  </div>
 </body>
 </html>
