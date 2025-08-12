@@ -11,17 +11,21 @@
     }
     *{box-sizing:border-box}
     html,body{height:100%;margin:0}
-    body{
-      color:var(--text);
-      font-family: system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial;
-      /* ✅ Seamless pattern background (repeat) */
-      background-color: var(--navy);
-      background-image: url("/assets/pattern.png");
-      background-size: 480px 480px;   /* tweak tile size here */
-      background-repeat: repeat;
-      background-attachment: fixed;
-      display:flex; align-items:center; justify-content:center;
-    }
+    body {
+  color: var(--text);
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial;
+  /* ✅ Single fullscreen background */
+  background-color: var(--navy);
+  background-image: url("/assets/pattern.png");
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-attachment: fixed;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
     .wrap{
       width:min(960px,92%);
       text-align:center;
