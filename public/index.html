@@ -1,53 +1,56 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>🚽 To The Toilet – WIPE Game</title>
-  <link rel="icon" type="image/png" href="/game/assets/favicon.png">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>🚽 To The Toilet — WIPE Game</title>
+  <link rel="icon" type="image/png" href="/game/assets/favicon.png" />
   <style>
-    body {
-      margin: 0;
-      background-color: #0E2341;
-      color: white;
-      font-family: Arial, sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      text-align: center;
+    :root{
+      --navy:#0E2341; --gold:#F6C445; --blue:#1E4E89; --text:#F7F7F7;
     }
-    h1 {
-      font-size: 3rem;
-      margin-bottom: 0.5rem;
-      color: gold;
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0}
+    body{
+      color:var(--text);
+      font-family: system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial;
+      /* ✅ Seamless pattern background (repeat) */
+      background-color: var(--navy);
+      background-image: url("/assets/pattern.png");
+      background-size: 480px 480px;   /* tweak tile size here */
+      background-repeat: repeat;
+      background-attachment: fixed;
+      display:flex; align-items:center; justify-content:center;
     }
-    p {
-      font-size: 1.2rem;
-      max-width: 500px;
+    .wrap{
+      width:min(960px,92%);
+      text-align:center;
+      background:rgba(14,35,65,.78);
+      border:1px solid rgba(255,255,255,.12);
+      border-radius:18px;
+      padding:32px 22px;
+      backdrop-filter: blur(2px);
+      box-shadow: 0 10px 40px rgba(0,0,0,.35);
     }
-    a.button {
-      display: inline-block;
-      margin-top: 20px;
-      padding: 15px 30px;
-      background-color: gold;
-      color: #0E2341;
-      font-size: 1.5rem;
-      font-weight: bold;
-      border-radius: 8px;
-      text-decoration: none;
-      transition: background 0.2s;
+    h1{margin:0 0 8px; font-size:clamp(28px,6vw,56px); color:var(--gold)}
+    p{margin:8px auto 18px; max-width:720px; font-size:clamp(16px,2.8vw,20px)}
+    .cta{
+      display:inline-block; padding:14px 24px; border-radius:12px;
+      background:var(--gold); color:#06233f; font-weight:900; text-decoration:none;
+      font-size:clamp(18px,3.5vw,22px);
+      box-shadow: 0 6px 0 #caa02b; transition: transform .05s ease-in-out;
     }
-    a.button:hover {
-      background-color: #ffdb4d;
-    }
+    .cta:active{ transform: translateY(2px); box-shadow: 0 4px 0 #caa02b; }
+    .sub{opacity:.85; font-size:14px; margin-top:8px}
   </style>
 </head>
 <body>
-  <h1>🚽 To The Toilet</h1>
-  <p>WIPE away your debt in our toilet-themed crypto mini-game.<br>
-     Can you catch the gains before they hit the bowl?</p>
-  <a class="button" href="/game">▶ Play Now</a>
+  <main class="wrap">
+    <h1>🚽 To The Toilet</h1>
+    <p>WIPE away your debt in our toilet-themed crypto mini-game.<br/>
+       Can you catch the gains before they hit the bowl?</p>
+    <a class="cta" href="/game">▶ Play Now</a>
+    <div class="sub">Powered by the WIPE community • #WIPEcoin</div>
+  </main>
 </body>
 </html>
