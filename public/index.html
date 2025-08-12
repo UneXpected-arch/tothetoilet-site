@@ -32,30 +32,30 @@
       transform:translate(-50%,-50%) scale(1.05);
       object-fit:cover; z-index:-3; will-change:transform;
     }
-    /* Readability overlay */
+    /* Readability overlay + image fallback */
     .overlay{ position:fixed; inset:0; background:rgba(14,35,65,.65); z-index:-2; pointer-events:none; }
+    .no-video .overlay{
+      background:
+        linear-gradient(rgba(14,35,65,.65), rgba(14,35,65,.65)),
+        url("/assets/social-card.png") center/cover no-repeat;
+    }
 
     /* Floating layer */
-    .float-layer{ position:fixed; inset:0; pointer-events:none; z-index:-1; overflow:hidden; }
-    .float{
-      position:absolute; width:54px; will-change:transform,filter,opacity;
-      animation: drift var(--dur,14s) linear infinite, glow 2s ease-in-out infinite alternate;
-      filter: drop-shadow(0 0 10px rgba(246,196,69,.75)) drop-shadow(0 0 18px rgba(246,196,69,.55));
-      opacity:0;
-    }
-    @keyframes drift{
-      0%   { transform:translate(var(--x,0px), 110vh) rotate(0deg); opacity:0; }
-      10%  { opacity:1; }
-      100% { transform:translate(calc(var(--x,0px) + var(--moveX,80px)), -15vh) rotate(360deg); opacity:0; }
-    }
-    @keyframes glow{
-      from { filter: drop-shadow(0 0 6px rgba(246,196,69,.8)) drop-shadow(0 0 14px rgba(246,196,69,.6)); }
-      to   { filter: drop-shadow(0 0 12px rgba(255,215,130,.95)) drop-shadow(0 0 22px rgba(255,180,60,.8)); }
+    #float-layer{ position:fixed; inset:0; pointer-events:none; z-index:-1; overflow:hidden; }
+    .float-item{
+      position:absolute; width:80px; height:auto;
+      filter: drop-shadow(0 0 14px rgba(255,255,200,.9));
+      will-change: transform, opacity;
     }
     .sparkle{
       position:absolute; width:6px; height:6px; border-radius:50%;
-      background:radial-gradient(circle,#fffbe6 0%, #ffe07a 55%, rgba(255,184,41,.85) 100%);
-      pointer-events:none; opacity:.9; filter:blur(.2px);
+      background:radial-gradient(circle,#fff 0%, #ffe07a 40%, transparent 70%);
+      pointer-events:none; opacity:.85; filter:blur(.2px);
+      animation: sparkleFade .8s linear forwards;
+    }
+    @keyframes sparkleFade {
+      0% { transform: scale(1) translateY(0); opacity: 1; }
+      100% { transform: scale(.5) translateY(-8px); opacity: 0; }
     }
 
     body{
@@ -89,21 +89,13 @@
 
     /* Mobile tweaks */
     @media (max-width:768px){
-      .float{ width:40px; }
+      .float-item{ width:40px; }
       .wrap{ padding:26px 18px; }
       body{ padding:28px 0 42px; }
     }
     /* Reduced motion */
     @media (prefers-reduced-motion:reduce){
-      .float{ animation:none !important }
       .emoji{ animation:none !important }
-    }
-
-    /* Fallback image if video fails */
-    .no-video .overlay{
-      background:
-        linear-gradient(rgba(14,35,65,.65), rgba(14,35,65,.65)),
-        url("/assets/social-card.png") center/cover no-repeat;
     }
   </style>
 </head>
@@ -115,14 +107,8 @@
   </video>
   <div class="overlay"></div>
 
-  <!-- Floating coins & TP rolls -->
-  <div class="float-layer" id="floatLayer">
-    <img src="/assets/coin.png"    class="float" style="--dur:13s;">
-    <img src="/assets/tp-roll.png" class="float" style="--dur:17s;">
-    <img src="/assets/coin.png"    class="float" style="--dur:15s;">
-    <img src="/assets/tp-roll.png" class="float" style="--dur:19s;">
-    <img src="/assets/coin.png"    class="float" style="--dur:14s;">
-  </div>
+  <!-- Floating decorative items with sparkle trails -->
+  <div id="float-layer"></div>
 
   <main class="wrap">
     <h1>🚽 TO THE TOILET</h1>
@@ -147,7 +133,7 @@
   </div>
 
   <script>
-    // Video parallax (gentler on mobile)
+    // Parallax for video + fallbacks
     (function(){
       const video = document.getElementById('bg-video');
       const isMobile = matchMedia('(max-width:768px)').matches;
@@ -174,67 +160,59 @@
       setTimeout(()=>{ if (video.readyState < 2) fail(); }, 2000);
     })();
 
-    // Floaters + sparkles (lighter on mobile)
+    // Floaters + sparkle trails
     (function(){
-      const layer = document.getElementById('floatLayer');
+      const layer = document.getElementById('float-layer');
       const isMobile = matchMedia('(max-width:768px)').matches;
+      const MAX_MOBILE = 4;
 
-      function reset(el){
-        const x = Math.random()*innerWidth;
-        el.style.setProperty('--x', `${x - innerWidth*0.5}px`);
-        el.style.setProperty('--moveX', `${(Math.random()*180-90).toFixed(0)}px`);
-        el.style.left = `${x}px`;
-        el.style.top  = `${innerHeight + 60}px`;
-        el.style.opacity = 0.001;
-        const s = isMobile ? (0.7 + Math.random()*0.5) : (0.8 + Math.random()*0.8);
-        el.style.transform = `scale(${s})`;
+      function spawnOne(){
+        const img = new Image();
+        img.className = 'float-item';
+        const isCoin = Math.random() < 0.55;
+        img.src  = isCoin ? '/assets/coin.png' : '/assets/tp-roll.png';
+        img.alt  = isCoin ? 'Coin' : 'Toilet Paper Roll';
+        img.style.left = (Math.random() * 92 + 4) + 'vw';
+        img.style.top  = '110vh';
+
+        // Size + speed
+        const scale = isMobile ? (0.7 + Math.random()*0.5) : (0.8 + Math.random()*0.8);
+        img.style.width = (80 * scale) + 'px';
+        const speed = (isMobile ? 0.6 : 0.9) + Math.random()*0.6; // px per frame
+
+        layer.appendChild(img);
+
+        let y = window.innerHeight + 120;
+        let t = 0;
+        (function tick(){
+          t += 1;
+          y -= speed;
+          const sway = Math.sin(t/40) * (isMobile ? 12 : 18);
+          img.style.transform = `translate(${sway}px, ${y}px) rotate(${t*0.6}deg)`;
+          // Sparkle every few frames
+          if (t % (isMobile ? 12 : 8) === 0){
+            const sp = document.createElement('div');
+            sp.className = 'sparkle';
+            const r = img.getBoundingClientRect();
+            sp.style.left = (r.left + r.width/2) + 'px';
+            sp.style.top  = (r.top  + r.height*0.7) + 'px';
+            document.body.appendChild(sp);
+            setTimeout(()=>sp.remove(), 850);
+          }
+          if (y > -140) requestAnimationFrame(tick);
+          else img.remove();
+        })();
       }
 
-      function sparkle(el, lighter=false){
-        const r = el.getBoundingClientRect();
-        const sp = document.createElement('div');
-        sp.className='sparkle';
-        sp.style.left = (r.left + r.width/2 + (Math.random()*10-5)) + 'px';
-        sp.style.top  = (r.top  + r.height/2 + (Math.random()*10-5)) + 'px';
-        document.body.appendChild(sp);
-        const life = (lighter?600:700) + Math.random()*400, t0 = performance.now();
-        (function tick(t){
-          const k = Math.min(1,(t-t0)/life), up = -60*k;
-          sp.style.transform = `translate(-50%,-50%) translateY(${up}px) scale(${1-k*0.5})`;
-          sp.style.opacity = (1-k).toFixed(2);
-          if(k<1) requestAnimationFrame(tick); else sp.remove();
-        })(t0);
+      // Keep a steady stream
+      function loopSpawn(){
+        const count = layer.querySelectorAll('.float-item').length;
+        if (!isMobile && count < 8) spawnOne();
+        if (isMobile && count < MAX_MOBILE) spawnOne();
       }
+      setInterval(loopSpawn, 900);
 
-      function attach(el){
-        reset(el);
-        const baseMin = isMobile ? 18 : 14;
-        const baseMax = isMobile ? 24 : 20;
-        el.style.setProperty('--dur', (baseMin + Math.random()*(baseMax-baseMin))+'s');
-
-        let id = setInterval(()=>sparkle(el, true), isMobile ? 420 : 260);
-        el.addEventListener('animationiteration', ()=>{
-          clearInterval(id); reset(el);
-          id = setInterval(()=>sparkle(el, true), isMobile ? 420 : 260);
-        });
-      }
-
-      const seeds = Array.from(layer.querySelectorAll('.float'));
-      if (isMobile && seeds.length > 3) seeds.slice(3).forEach(n=>n.remove());
-      (isMobile ? seeds.slice(0,3) : seeds).forEach(attach);
-
-      // Slow spawn cadence on mobile
-      setInterval(()=>{
-        const imgs=['/assets/coin.png','/assets/tp-roll.png'];
-        if (isMobile && layer.querySelectorAll('.float').length >= 4) return;
-        const el=document.createElement('img');
-        el.src = imgs[Math.random()<0.55?0:1];
-        el.className='float';
-        layer.appendChild(el);
-        attach(el);
-      }, isMobile ? 7000 : 4500);
-
-      // Hide floaters if assets missing (prevents 404 spam)
+      // Hide floaters if assets missing
       Promise.all(['/assets/coin.png','/assets/tp-roll.png'].map(src => new Promise(r=>{
         const i=new Image(); i.onload=()=>r(true); i.onerror=()=>r(false); i.src=src;
       }))).then(([coinOK,tpOK])=>{
