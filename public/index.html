@@ -1,23 +1,25 @@
-<!doctype html>
+<!doctype html> 
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>🚽 To The Toilet — WIPE Game</title>
   <link rel="icon" type="image/png" href="/game/assets/favicon.png" />
-  
-  <meta http-equiv="Content-Security-Policy"
-      content="
-        default-src 'self';
-        img-src 'self' data: https:;
-        media-src 'self' https:;
-        style-src 'self' 'unsafe-inline' https://platform.twitter.com;
-        script-src 'self' 'unsafe-inline' 'unsafe-eval' https://platform.twitter.com https://cdn.syndication.twimg.com;
-        frame-src https://platform.twitter.com https://syndication.twitter.com;
-        connect-src 'self' https://platform.twitter.com https://cdn.syndication.twimg.com;
-      ">
 
-  
+  <!-- Strict, safe CSP (no unsafe-eval, no external scripts) -->
+  <meta http-equiv="Content-Security-Policy"
+        content="
+          default-src 'self';
+          script-src 'self';
+          style-src 'self' 'unsafe-inline';
+          img-src 'self' data:;
+          media-src 'self';
+          font-src 'self';
+          connect-src 'self';
+          frame-src 'none';
+          base-uri 'self';
+          form-action 'self';
+        ">
 
   <!-- Open Graph -->
   <meta property="og:title" content="🚽 To The Toilet — WIPE Game" />
@@ -26,7 +28,7 @@
   <meta property="og:url" content="https://www.tothetoilet.xyz" />
   <meta property="og:type" content="website" />
 
-  <!-- Twitter Card -->
+  <!-- Twitter Card (just metadata; no scripts needed) -->
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:site" content="@WIPE_it_UP" />
   <meta name="twitter:title" content="🚽 To The Toilet — WIPE Game" />
@@ -98,7 +100,10 @@
     .cta:hover{ box-shadow:0 8px 24px rgba(246,196,69,1), 0 6px 0 #caa02b }
     .cta:active{ transform:translateY(2px); box-shadow:0 4px 0 #caa02b }
     .sub{ opacity:.85; font-size:14px; margin-top:10px }
-    .twitter-btn{ display:inline-block; margin-top:8px; background:var(--blue); color:var(--text); padding:8px 14px; border-radius:8px; font-weight:600; text-decoration:none; }
+    .x-btn{
+      display:inline-block; margin-top:10px; background:#000;
+      color:#fff; padding:8px 14px; border-radius:8px; font-weight:700; text-decoration:none;
+    }
 
     /* Mobile tweaks */
     @media (max-width:768px){
@@ -113,7 +118,7 @@
   </style>
 </head>
 <body>
-  <!-- Background video (update filenames if yours differ) -->
+  <!-- Background video -->
   <video id="bg-video" class="video-bg" autoplay muted loop playsinline poster="/assets/social-card.png">
     <source src="/assets/bg.webm" type="video/webm">
     <source src="/assets/bg.mp4" type="video/mp4">
@@ -134,19 +139,14 @@
     <div class="sub">
       Powered by the WIPE community • #WIPEcoin
       <br/>
-      <a class="twitter-btn" href="https://twitter.com/WIPE_it_UP" target="_blank">🐦 Follow us on Twitter</a>
+      <a class="x-btn" href="https://twitter.com/WIPE_it_UP" target="_blank" rel="noopener">Follow on X (Twitter)</a>
     </div>
   </main>
 
-  <!-- Twitter timeline -->
-  <div class="wrap" style="max-width:600px;">
-    <a class="twitter-timeline" data-width="500" data-height="600" data-theme="dark"
-       href="https://twitter.com/WIPE_it_UP?ref_src=twsrc%5Etfw">Tweets by WIPE_it_UP</a>
-    <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
-  </div>
+  <!-- (Removed Twitter embed script to keep CSP strict) -->
 
   <script>
-    // Parallax for video + fallbacks
+    // Parallax for video + fallbacks (no eval, no string timeouts)
     (function(){
       const video = document.getElementById('bg-video');
       const isMobile = matchMedia('(max-width:768px)').matches;
@@ -173,7 +173,7 @@
       setTimeout(()=>{ if (video.readyState < 2) fail(); }, 2000);
     })();
 
-    // Floaters + sparkle trails
+    // Floaters + sparkle trails (no eval, no external libs)
     (function(){
       const layer = document.getElementById('float-layer');
       const isMobile = matchMedia('(max-width:768px)').matches;
