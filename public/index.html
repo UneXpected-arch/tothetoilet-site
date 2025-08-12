@@ -7,65 +7,71 @@
   <link rel="icon" type="image/png" href="/game/assets/favicon.png" />
 
   <!-- Open Graph -->
-<meta property="og:title" content="🚽 To The Toilet — WIPE Game" />
-<meta property="og:description" content="💦 Flush your debt, catch the gains! Can YOU scoop the profits before they get flushed forever?" />
-<meta property="og:image" content="https://www.tothetoilet.xyz/assets/social-card.png" />
-<meta property="og:url" content="https://www.tothetoilet.xyz" />
-<meta property="og:type" content="website" />
+  <meta property="og:title" content="🚽 To The Toilet — WIPE Game" />
+  <meta property="og:description" content="💦 Flush your debt, catch the gains! Can YOU scoop the profits before they get flushed forever?" />
+  <meta property="og:image" content="https://www.tothetoilet.xyz/assets/social-card.png" />
+  <meta property="og:url" content="https://www.tothetoilet.xyz" />
+  <meta property="og:type" content="website" />
 
-<!-- Twitter Card -->
-<meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:site" content="@WIPE_it_UP" />
-<meta name="twitter:title" content="🚽 To The Toilet — WIPE Game" />
-<meta name="twitter:description" content="💦 Flush your debt, catch the gains! Can YOU scoop the profits before they get flushed forever?" />
-<meta name="twitter:image" content="https://www.tothetoilet.xyz/assets/social-card.png" />
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:site" content="@WIPE_it_UP" />
+  <meta name="twitter:title" content="🚽 To The Toilet — WIPE Game" />
+  <meta name="twitter:description" content="💦 Flush your debt, catch the gains! Can YOU scoop the profits before they get flushed forever?" />
+  <meta name="twitter:image" content="https://www.tothetoilet.xyz/assets/social-card.png" />
 
   <style>
     :root{ --navy:#0E2341; --gold:#F6C445; --blue:#1E4E89; --text:#F7F7F7; }
-    *{ box-sizing:border-box }
-    html,body{ height:100%; margin:0 }
+    *{ box-sizing:border-box; margin:0; padding:0; }
+    html,body{ height:100%; overflow-x:hidden; }
+
+    /* Background video */
+    .video-bg{
+      position:fixed; top:50%; left:50%;
+      min-width:100%; min-height:100%;
+      transform:translate(-50%,-50%) scale(1.05);
+      object-fit:cover; z-index:-3; will-change:transform;
+    }
+    /* Dark readability overlay */
+    .overlay{ position:fixed; inset:0; background:rgba(14,35,65,.65); z-index:-2; pointer-events:none; }
+
+    /* Floating layer (coins + TP) */
+    .float-layer{ position:fixed; inset:0; pointer-events:none; z-index:-1; overflow:hidden; }
+    .float{
+      position:absolute; width:54px; will-change:transform,filter,opacity;
+      animation: drift var(--dur,14s) linear infinite, glow 2s ease-in-out infinite alternate;
+      filter: drop-shadow(0 0 10px rgba(246,196,69,.75)) drop-shadow(0 0 18px rgba(246,196,69,.55));
+      opacity:0;
+    }
+    @keyframes drift{
+      0%   { transform:translate(var(--x,0px), 110vh) rotate(0deg); opacity:0; }
+      10%  { opacity:1; }
+      100% { transform:translate(calc(var(--x,0px) + var(--moveX,80px)), -15vh) rotate(360deg); opacity:0; }
+    }
+    @keyframes glow{
+      from { filter: drop-shadow(0 0 6px rgba(246,196,69,.8)) drop-shadow(0 0 14px rgba(246,196,69,.6)); }
+      to   { filter: drop-shadow(0 0 12px rgba(255,215,130,.95)) drop-shadow(0 0 22px rgba(255,180,60,.8)); }
+    }
+    .sparkle{
+      position:absolute; width:6px; height:6px; border-radius:50%;
+      background:radial-gradient(circle,#fffbe6 0%, #ffe07a 55%, rgba(255,184,41,.8) 100%);
+      pointer-events:none; opacity:.85; filter:blur(.2px);
+    }
 
     body{
       color:var(--text);
       font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial;
-      /* single image + dark overlay; second layer is the image we parallax */
-      background:
-        linear-gradient(rgba(14,35,65,0.65), rgba(14,35,65,0.65)),
-        url("/assets/background.png") no-repeat center / cover;
-      background-position:
-        center,
-        calc(50% + var(--bgx,0px)) calc(50% + var(--bgy,0px));
       display:flex; flex-direction:column; align-items:center; justify-content:flex-start;
       padding:40px 0 60px;
     }
-
-    @media (prefers-reduced-motion: reduce){
-      body{ --bgx:0px; --bgy:0px }
-      .emoji{ animation:none !important }
-    }
-
     .wrap{
-      width:min(960px,92%);
-      text-align:center;
-      background:rgba(14,35,65,.78);
-      border:1px solid rgba(255,255,255,.12);
-      border-radius:18px;
-      padding:32px 22px;
-      backdrop-filter:blur(2px);
-      box-shadow:0 10px 40px rgba(0,0,0,.35);
-      margin-bottom:40px;
+      width:min(960px,92%); text-align:center;
+      background:rgba(14,35,65,.78); border:1px solid rgba(255,255,255,.12);
+      border-radius:18px; padding:32px 22px; backdrop-filter:blur(2px);
+      box-shadow:0 10px 40px rgba(0,0,0,.35); margin-bottom:40px;
     }
-
-    h1{
-      margin:0 0 8px;
-      font-size:clamp(28px,6vw,56px);
-      color:var(--gold);
-      text-shadow:0 0 14px rgba(246,196,69,.9);
-      letter-spacing:.5px;
-    }
-
+    h1{ margin:0 0 8px; font-size:clamp(28px,6vw,56px); color:var(--gold); text-shadow:0 0 14px rgba(246,196,69,.9); letter-spacing:.5px; }
     p{ margin:8px auto 18px; max-width:720px; font-size:clamp(16px,2.8vw,20px) }
-
     .emoji{ display:inline-block; animation:pulse 1.4s infinite ease-in-out }
     @keyframes pulse{ 0%,100%{ transform:scale(1) } 50%{ transform:scale(1.2) } }
 
@@ -75,36 +81,31 @@
       font-size:clamp(18px,3.5vw,22px);
       box-shadow:0 6px 0 #caa02b, 0 0 20px rgba(246,196,69,.85);
       transition:transform .15s ease, box-shadow .15s ease;
-      perspective:500px;
     }
     .cta:hover{ box-shadow:0 8px 24px rgba(246,196,69,1), 0 6px 0 #caa02b }
     .cta:active{ transform:translateY(2px); box-shadow:0 4px 0 #caa02b }
-
-    .bounce-in{ animation:bounceIn 1s ease forwards }
-    @keyframes bounceIn{
-      0%{ transform:scale(.3); opacity:0 }
-      50%{ transform:scale(1.05); opacity:1 }
-      70%{ transform:scale(.94) }
-      100%{ transform:scale(1) }
-    }
-
     .sub{ opacity:.85; font-size:14px; margin-top:10px }
-    .twitter-btn{
-      display:inline-block; margin-top:8px; background:var(--blue);
-      color:var(--text); padding:8px 14px; border-radius:8px; font-weight:600; text-decoration:none;
-    }
-
-    /* sparkles overlay for CTA */
-    .sparkles{ position:absolute; inset:0; pointer-events:none; overflow:visible }
-    .sparkle{
-      position:absolute; width:6px; height:6px; border-radius:50%;
-      background: radial-gradient(circle, #fff8c9 0%, #F6C445 60%, #caa02b 100%);
-      opacity:0; transform:translate(-50%,-50%) scale(.6);
-      will-change:transform,opacity;
-    }
+    .twitter-btn{ display:inline-block; margin-top:8px; background:var(--blue); color:var(--text); padding:8px 14px; border-radius:8px; font-weight:600; text-decoration:none; }
   </style>
 </head>
 <body>
+  <!-- Background video -->
+  <video id="bg-video" class="video-bg" autoplay muted loop playsinline>
+    <source src="/assets/bg.webm" type="video/webm">
+    <source src="/assets/bg.mp4" type="video/mp4">
+  </video>
+  <div class="overlay"></div>
+
+  <!-- Floating coins & TP rolls with sparkle trails -->
+  <div class="float-layer" id="floatLayer">
+    <!-- seeds; JS will keep respawning -->
+    <img src="/assets/coin.png"    class="float" style="--dur:13s;">
+    <img src="/assets/tp-roll.png" class="float" style="--dur:17s;">
+    <img src="/assets/coin.png"    class="float" style="--dur:15s;">
+    <img src="/assets/tp-roll.png" class="float" style="--dur:19s;">
+    <img src="/assets/coin.png"    class="float" style="--dur:14s;">
+  </div>
+
   <main class="wrap">
     <h1>🚽 TO THE TOILET</h1>
     <p>
@@ -112,12 +113,7 @@
       <span class="emoji">🧻</span> The only game where <span style="color:var(--gold);font-weight:700;">degeneracy meets destiny</span>.<br/>
       <span class="emoji">💰</span> Can YOU scoop the <span style="color:var(--gold);font-weight:700;">profits</span> before they get flushed forever?
     </p>
-
-    <div style="position:relative; display:inline-block;">
-      <a class="cta bounce-in" href="/game">▶ Play Now</a>
-      <div class="sparkles"></div>
-    </div>
-
+    <a class="cta" href="/game">▶ Play Now</a>
     <div class="sub">
       Powered by the WIPE community • #WIPEcoin
       <br/>
@@ -138,69 +134,73 @@
   </div>
 
   <script>
-  // Mouse/touch reactive parallax (updates CSS vars for background-position)
+  // Parallax for video
   (function(){
-    const body=document.body;
-    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    let tx=0, ty=0, cx=0, cy=0;
-    const max=18, ease=.08;
-    function set(x,y){
-      const nx=(x/(innerWidth||1))*2-1, ny=(y/(innerHeight||1))*2-1;
-      tx=nx*max; ty=ny*max;
-    }
-    addEventListener('mousemove', e=>set(e.clientX,e.clientY), {passive:true});
-    addEventListener('touchmove', e=>{ if(e.touches[0]) set(e.touches[0].clientX, e.touches[0].clientY); }, {passive:true});
-    (function loop(){
-      cx+=(tx-cx)*ease; cy+=(ty-cy)*ease;
-      body.style.setProperty('--bgx', cx.toFixed(2)+'px');
-      body.style.setProperty('--bgy', cy.toFixed(2)+'px');
-      requestAnimationFrame(loop);
-    })();
+    const v=document.getElementById('bg-video'); let tx=0,ty=0,cx=0,cy=0;
+    const max=15, ease=.05;
+    function set(x,y){ const nx=x/innerWidth*2-1, ny=y/innerHeight*2-1; tx=nx*max; ty=ny*max; }
+    addEventListener('mousemove',e=>set(e.clientX,e.clientY),{passive:true});
+    addEventListener('touchmove',e=>{ if(e.touches[0]) set(e.touches[0].clientX,e.touches[0].clientY) },{passive:true});
+    (function loop(){ cx+=(tx-cx)*ease; cy+=(ty-cy)*ease; v.style.transform=`translate(-50%,-50%) scale(1.05) translate(${cx.toFixed(2)}px,${cy.toFixed(2)}px)`; requestAnimationFrame(loop) })();
   })();
 
-  // Tilt effect on CTA + gold sparkles
+  // Floating objects + sparkle trails
   (function(){
-    const btn=document.querySelector('.cta'); if(!btn) return;
-    const host=btn.parentElement, layer=host.querySelector('.sparkles');
-    const maxTilt=10, ease=.15; let tx=0, ty=0, cx=0, cy=0;
+    const layer = document.getElementById('floatLayer');
 
-    btn.addEventListener('mousemove', e=>{
-      const r=btn.getBoundingClientRect();
-      const x=((e.clientX-r.left)/r.width)*2-1;
-      const y=((e.clientY-r.top)/r.height)*2-1;
-      tx=y*maxTilt; ty=-x*maxTilt;
-    });
-    btn.addEventListener('mouseleave', ()=>{ tx=0; ty=0; });
+    function reset(el){
+      const x = Math.random()*innerWidth;
+      el.style.setProperty('--x', `${x - innerWidth*0.5}px`);
+      el.style.setProperty('--moveX', `${(Math.random()*220-110).toFixed(0)}px`);
+      el.style.left = `${x}px`;
+      el.style.top  = `${innerHeight + 60}px`;
+      el.style.opacity = 0.001; // will fade in via keyframes
+      // random size
+      const s = 0.8 + Math.random()*0.8;
+      el.style.transform = `scale(${s})`;
+    }
 
-    (function loop(){
-      cx+=(tx-cx)*ease; cy+=(ty-cy)*ease;
-      btn.style.transform=`rotateX(${cx.toFixed(2)}deg) rotateY(${cy.toFixed(2)}deg)`;
-      requestAnimationFrame(loop);
-    })();
+    // sparkle particle emitter
+    function spark(el){
+      const r = el.getBoundingClientRect();
+      const sp = document.createElement('div');
+      sp.className='sparkle';
+      sp.style.left = (r.left + r.width/2 + (Math.random()*10-5)) + 'px';
+      sp.style.top  = (r.top  + r.height/2 + (Math.random()*10-5)) + 'px';
+      document.body.appendChild(sp);
+      const life = 700 + Math.random()*500, t0 = performance.now();
+      (function tick(t){
+        const k = Math.min(1,(t-t0)/life); const up = -70*k;
+        sp.style.transform = `translate(-50%,-50%) translateY(${up}px) scale(${1-k*0.5})`;
+        sp.style.opacity = (1-k).toFixed(2);
+        if(k<1) requestAnimationFrame(tick); else sp.remove();
+      })(t0);
+    }
 
-    function spawn(){
-      const s=document.createElement('div'); s.className='sparkle';
-      const r=btn.getBoundingClientRect(), xr=Math.random(), yr=.2+.6*Math.random();
-      s.style.left=(xr*r.width)+'px'; s.style.top=(yr*r.height)+'px';
-      layer.appendChild(s);
-
-      const a=Math.random()*Math.PI*2, d=18+Math.random()*28;
-      const dx=Math.cos(a)*d, dy=Math.sin(a)*d;
-      const life=900+Math.random()*400, t0=performance.now();
-
-      requestAnimationFrame(function tick(t){
-        const k=Math.min(1,(t-t0)/life), out=1-Math.pow(1-k,2);
-        s.style.opacity=(k<.15? k/.15 : 1-(k-.15)/.85).toFixed(2);
-        s.style.transform=`translate(calc(-50% + ${dx*out}px), calc(-50% + ${dy*out}px)) scale(${0.6+0.4*out})`;
-        if(k<1) requestAnimationFrame(tick); else s.remove();
+    function attach(el){
+      reset(el);
+      const dur = parseFloat(getComputedStyle(el).getPropertyValue('--dur')) || 16;
+      // emit sparkles during flight
+      let id = setInterval(()=>spark(el), 220);
+      el.addEventListener('animationiteration', ()=>{ // when one run ends
+        clearInterval(id); reset(el); // restart params
+        // restart sparkles
+        id = setInterval(()=>spark(el), 220);
       });
     }
 
-    let hover=false;
-    const id=setInterval(()=>{ if(!hover) spawn(); }, 420);
-    btn.addEventListener('mouseenter', ()=>{ hover=true; for(let i=0;i<10;i++) setTimeout(spawn,i*40); });
-    btn.addEventListener('mouseleave', ()=>{ hover=false; });
-    btn.addEventListener('click', ()=>{ for(let i=0;i<10;i++) setTimeout(spawn,i*25); });
+    layer.querySelectorAll('.float').forEach(attach);
+
+    // Optional: periodically spawn extra floaters
+    setInterval(()=>{
+      const imgs=['/assets/coin.png','/assets/tp-roll.png'];
+      const el=document.createElement('img');
+      el.src = imgs[Math.random()<0.55?0:1];
+      el.className='float';
+      el.style.setProperty('--dur', (14+Math.random()*8)+'s');
+      layer.appendChild(el);
+      attach(el);
+    }, 4500);
   })();
   </script>
 </body>
