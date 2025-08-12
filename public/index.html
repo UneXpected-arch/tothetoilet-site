@@ -1,25 +1,10 @@
-<!doctype html> 
+<!doctype html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>🚽 To The Toilet — WIPE Game</title>
   <link rel="icon" type="image/png" href="/game/assets/favicon.png" />
-
-  <!-- Strict, safe CSP (no unsafe-eval, no external scripts) -->
-  <meta http-equiv="Content-Security-Policy"
-        content="
-          default-src 'self';
-          script-src 'self';
-          style-src 'self' 'unsafe-inline';
-          img-src 'self' data:;
-          media-src 'self';
-          font-src 'self';
-          connect-src 'self';
-          frame-src 'none';
-          base-uri 'self';
-          form-action 'self';
-        ">
 
   <!-- Open Graph -->
   <meta property="og:title" content="🚽 To The Toilet — WIPE Game" />
@@ -28,7 +13,7 @@
   <meta property="og:url" content="https://www.tothetoilet.xyz" />
   <meta property="og:type" content="website" />
 
-  <!-- Twitter Card (just metadata; no scripts needed) -->
+  <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:site" content="@WIPE_it_UP" />
   <meta name="twitter:title" content="🚽 To The Toilet — WIPE Game" />
@@ -100,9 +85,24 @@
     .cta:hover{ box-shadow:0 8px 24px rgba(246,196,69,1), 0 6px 0 #caa02b }
     .cta:active{ transform:translateY(2px); box-shadow:0 4px 0 #caa02b }
     .sub{ opacity:.85; font-size:14px; margin-top:10px }
-    .x-btn{
-      display:inline-block; margin-top:10px; background:#000;
-      color:#fff; padding:8px 14px; border-radius:8px; font-weight:700; text-decoration:none;
+    .twitter-btn{ display:inline-block; margin-top:8px; background:var(--blue); color:var(--text); padding:8px 14px; border-radius:8px; font-weight:600; text-decoration:none; }
+
+    #tweets-wrap h2 {
+      color: var(--gold);
+      margin-bottom: 12px;
+      text-shadow: 0 0 8px rgba(246,196,69,.7);
+    }
+    .tweet {
+      text-align: left;
+      padding: 10px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .tweet p {
+      margin-bottom: 4px;
+    }
+    .tweet small {
+      opacity: 0.7;
+      font-size: 12px;
     }
 
     /* Mobile tweaks */
@@ -111,7 +111,6 @@
       .wrap{ padding:26px 18px; }
       body{ padding:28px 0 42px; }
     }
-    /* Reduced motion */
     @media (prefers-reduced-motion:reduce){
       .emoji{ animation:none !important }
     }
@@ -125,7 +124,7 @@
   </video>
   <div class="overlay"></div>
 
-  <!-- Floating decorative items with sparkle trails -->
+  <!-- Floating decorative items -->
   <div id="float-layer"></div>
 
   <main class="wrap">
@@ -139,46 +138,38 @@
     <div class="sub">
       Powered by the WIPE community • #WIPEcoin
       <br/>
-      <a class="x-btn" href="https://twitter.com/WIPE_it_UP" target="_blank" rel="noopener">Follow on X (Twitter)</a>
+      <a class="twitter-btn" href="https://twitter.com/WIPE_it_UP" target="_blank">🐦 Follow us on Twitter</a>
     </div>
   </main>
 
-  <!-- (Removed Twitter embed script to keep CSP strict) -->
+  <!-- Custom Tweet Feed (CSP friendly) -->
+  <div class="wrap" id="tweets-wrap" style="max-width:600px;">
+    <h2>Latest Tweets</h2>
+    <div id="tweets">Loading tweets...</div>
+  </div>
 
   <script>
-    // Parallax for video + fallbacks (no eval, no string timeouts)
+    // Parallax background
     (function(){
       const video = document.getElementById('bg-video');
       const isMobile = matchMedia('(max-width:768px)').matches;
       let tx=0,ty=0,cx=0,cy=0;
       const max = isMobile ? 8 : 15, ease = 0.05;
-
-      function set(x,y){
-        const nx = (x/innerWidth)*2-1, ny = (y/innerHeight)*2-1;
-        tx = nx*max; ty = ny*max;
-      }
+      function set(x,y){ const nx = (x/innerWidth)*2-1, ny = (y/innerHeight)*2-1; tx = nx*max; ty = ny*max; }
       addEventListener('mousemove', e=>set(e.clientX,e.clientY), {passive:true});
       addEventListener('touchmove', e=>{ if(e.touches[0]) set(e.touches[0].clientX,e.touches[0].clientY) }, {passive:true});
-
-      (function loop(){
-        cx += (tx-cx)*ease; cy += (ty-cy)*ease;
-        video.style.transform = `translate(-50%,-50%) scale(1.05) translate(${cx.toFixed(2)}px,${cy.toFixed(2)}px)`;
-        requestAnimationFrame(loop);
-      })();
-
-      // Reduced-motion fallback + video failure fallback
+      (function loop(){ cx += (tx-cx)*ease; cy += (ty-cy)*ease; video.style.transform = `translate(-50%,-50%) scale(1.05) translate(${cx.toFixed(2)}px,${cy.toFixed(2)}px)`; requestAnimationFrame(loop); })();
       if (matchMedia('(prefers-reduced-motion: reduce)').matches){ try{ video.pause(); video.removeAttribute('loop'); }catch(e){} }
       function fail(){ document.body.classList.add('no-video'); }
       video.addEventListener('error', fail, {once:true});
       setTimeout(()=>{ if (video.readyState < 2) fail(); }, 2000);
     })();
 
-    // Floaters + sparkle trails (no eval, no external libs)
+    // Floaters
     (function(){
       const layer = document.getElementById('float-layer');
       const isMobile = matchMedia('(max-width:768px)').matches;
       const MAX_MOBILE = 4;
-
       function spawnOne(){
         const img = new Image();
         img.className = 'float-item';
@@ -187,22 +178,15 @@
         img.alt  = isCoin ? 'Coin' : 'Toilet Paper Roll';
         img.style.left = (Math.random() * 92 + 4) + 'vw';
         img.style.top  = '110vh';
-
-        // Size + speed
         const scale = isMobile ? (0.7 + Math.random()*0.5) : (0.8 + Math.random()*0.8);
         img.style.width = (80 * scale) + 'px';
-        const speed = (isMobile ? 0.6 : 0.9) + Math.random()*0.6; // px per frame
-
+        const speed = (isMobile ? 0.6 : 0.9) + Math.random()*0.6;
         layer.appendChild(img);
-
-        let y = window.innerHeight + 120;
-        let t = 0;
+        let y = window.innerHeight + 120, t = 0;
         (function tick(){
-          t += 1;
-          y -= speed;
+          t += 1; y -= speed;
           const sway = Math.sin(t/40) * (isMobile ? 12 : 18);
           img.style.transform = `translate(${sway}px, ${y}px) rotate(${t*0.6}deg)`;
-          // Sparkle every few frames
           if (t % (isMobile ? 12 : 8) === 0){
             const sp = document.createElement('div');
             sp.className = 'sparkle';
@@ -216,22 +200,39 @@
           else img.remove();
         })();
       }
-
-      // Keep a steady stream
       function loopSpawn(){
         const count = layer.querySelectorAll('.float-item').length;
         if (!isMobile && count < 8) spawnOne();
         if (isMobile && count < MAX_MOBILE) spawnOne();
       }
       setInterval(loopSpawn, 900);
-
-      // Hide floaters if assets missing
-      Promise.all(['/assets/coin.png','/assets/tp-roll.png'].map(src => new Promise(r=>{
-        const i=new Image(); i.onload=()=>r(true); i.onerror=()=>r(false); i.src=src;
-      }))).then(([coinOK,tpOK])=>{
-        if(!(coinOK && tpOK)) layer.style.display='none';
-      });
+      Promise.all(['/assets/coin.png','/assets/tp-roll.png'].map(src => new Promise(r=>{ const i=new Image(); i.onload=()=>r(true); i.onerror=()=>r(false); i.src=src; }))).then(([coinOK,tpOK])=>{ if(!(coinOK && tpOK)) layer.style.display='none'; });
     })();
+
+    // Fetch tweets from API
+    fetch('/api/twitter-media')
+      .then(res => res.json())
+      .then(data => {
+        const tweetsEl = document.getElementById('tweets');
+        tweetsEl.innerHTML = '';
+        if (data.data && data.data.length) {
+          data.data.forEach(tweet => {
+            const el = document.createElement('div');
+            el.className = 'tweet';
+            el.innerHTML = `
+              <p>${tweet.text}</p>
+              <small>${new Date(tweet.created_at).toLocaleString()}</small>
+            `;
+            tweetsEl.appendChild(el);
+          });
+        } else {
+          tweetsEl.innerHTML = '<p>No tweets found.</p>';
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        document.getElementById('tweets').innerHTML = '<p>Error loading tweets.</p>';
+      });
   </script>
 </body>
 </html>
