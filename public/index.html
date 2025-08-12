@@ -25,37 +25,23 @@
     *{ box-sizing:border-box; margin:0; padding:0; }
     html,body{ height:100%; overflow-x:hidden; }
 
-    /* Background video */
-    .video-bg{
-      position:fixed; top:50%; left:50%;
-      min-width:100%; min-height:100%;
-      transform:translate(-50%,-50%) scale(1.05);
-      object-fit:cover; z-index:-3; will-change:transform;
+    /* Background video styles */
+    .video-bg {
+      position: fixed;
+      top: 50%; left: 50%;
+      min-width: 100%;
+      min-height: 100%;
+      transform: translate(-50%, -50%) scale(1.05);
+      object-fit: cover;
+      z-index: -2;
     }
-    /* Readability overlay */
-    .overlay{ position:fixed; inset:0; background:rgba(14,35,65,.65); z-index:-2; pointer-events:none; }
 
-    /* Floating layer */
-    .float-layer{ position:fixed; inset:0; pointer-events:none; z-index:-1; overflow:hidden; }
-    .float{
-      position:absolute; width:54px; will-change:transform,filter,opacity;
-      animation: drift var(--dur,14s) linear infinite, glow 2s ease-in-out infinite alternate;
-      filter: drop-shadow(0 0 10px rgba(246,196,69,.75)) drop-shadow(0 0 18px rgba(246,196,69,.55));
-      opacity:0;
-    }
-    @keyframes drift{
-      0%   { transform:translate(var(--x,0px), 110vh) rotate(0deg); opacity:0; }
-      10%  { opacity:1; }
-      100% { transform:translate(calc(var(--x,0px) + var(--moveX,80px)), -15vh) rotate(360deg); opacity:0; }
-    }
-    @keyframes glow{
-      from { filter: drop-shadow(0 0 6px rgba(246,196,69,.8)) drop-shadow(0 0 14px rgba(246,196,69,.6)); }
-      to   { filter: drop-shadow(0 0 12px rgba(255,215,130,.95)) drop-shadow(0 0 22px rgba(255,180,60,.8)); }
-    }
-    .sparkle{
-      position:absolute; width:6px; height:6px; border-radius:50%;
-      background:radial-gradient(circle,#fffbe6 0%, #ffe07a 55%, rgba(255,184,41,.8) 100%);
-      pointer-events:none; opacity:.85; filter:blur(.2px);
+    /* Dark overlay for readability */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(14,35,65,0.65);
+      z-index: -1;
     }
 
     body{
@@ -64,13 +50,27 @@
       display:flex; flex-direction:column; align-items:center; justify-content:flex-start;
       padding:40px 0 60px;
     }
+
     .wrap{
-      width:min(960px,92%); text-align:center;
-      background:rgba(14,35,65,.78); border:1px solid rgba(255,255,255,.12);
-      border-radius:18px; padding:32px 22px; backdrop-filter:blur(2px);
-      box-shadow:0 10px 40px rgba(0,0,0,.35); margin-bottom:40px;
+      width:min(960px,92%);
+      text-align:center;
+      background:rgba(14,35,65,.78);
+      border:1px solid rgba(255,255,255,.12);
+      border-radius:18px;
+      padding:32px 22px;
+      backdrop-filter:blur(2px);
+      box-shadow:0 10px 40px rgba(0,0,0,.35);
+      margin-bottom:40px;
     }
-    h1{ margin:0 0 8px; font-size:clamp(28px,6vw,56px); color:var(--gold); text-shadow:0 0 14px rgba(246,196,69,.9); letter-spacing:.5px; }
+
+    h1{
+      margin:0 0 8px;
+      font-size:clamp(28px,6vw,56px);
+      color:var(--gold);
+      text-shadow:0 0 14px rgba(246,196,69,.9);
+      letter-spacing:.5px;
+    }
+
     p{ margin:8px auto 18px; max-width:720px; font-size:clamp(16px,2.8vw,20px) }
     .emoji{ display:inline-block; animation:pulse 1.4s infinite ease-in-out }
     @keyframes pulse{ 0%,100%{ transform:scale(1) } 50%{ transform:scale(1.2) } }
@@ -84,20 +84,26 @@
     }
     .cta:hover{ box-shadow:0 8px 24px rgba(246,196,69,1), 0 6px 0 #caa02b }
     .cta:active{ transform:translateY(2px); box-shadow:0 4px 0 #caa02b }
-    .sub{ opacity:.85; font-size:14px; margin-top:10px }
-    .twitter-btn{ display:inline-block; margin-top:8px; background:var(--blue); color:var(--text); padding:8px 14px; border-radius:8px; font-weight:600; text-decoration:none; }
 
-    /* Mobile tweaks */
-    @media (max-width:768px){
-      .float{ width:40px; }
-      .wrap{ padding:26px 18px; }
-      body{ padding:28px 0 42px; }
+    .sub{ opacity:.85; font-size:14px; margin-top:10px }
+    .twitter-btn{
+      display:inline-block; margin-top:8px; background:var(--blue);
+      color:var(--text); padding:8px 14px; border-radius:8px; font-weight:600; text-decoration:none;
     }
 
-    /* Reduced motion */
-    @media (prefers-reduced-motion:reduce){
-      .float{ animation:none !important }
-      .emoji{ animation:none !important }
+    /* Floating coin and TP roll */
+    .float-item {
+      position: fixed;
+      width: 48px;
+      height: 48px;
+      z-index: -1;
+      animation: floatUp 12s linear infinite;
+    }
+    @keyframes floatUp {
+      0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+      10% { opacity: 1; }
+      90% { opacity: 1; }
+      100% { transform: translateY(-120px) rotate(360deg); opacity: 0; }
     }
   </style>
 </head>
@@ -109,14 +115,10 @@
   </video>
   <div class="overlay"></div>
 
-  <!-- Floating coins & TP rolls -->
-  <div class="float-layer" id="floatLayer">
-    <img src="/assets/coin.png"    class="float" style="--dur:13s;">
-    <img src="/assets/tp-roll.png" class="float" style="--dur:17s;">
-    <img src="/assets/coin.png"    class="float" style="--dur:15s;">
-    <img src="/assets/tp-roll.png" class="float" style="--dur:19s;">
-    <img src="/assets/coin.png"    class="float" style="--dur:14s;">
-  </div>
+  <!-- Floating decorations -->
+  <img src="/assets/coin.png" class="float-item" style="left:10%; animation-delay: 0s;">
+  <img src="/assets/tp-roll.png" class="float-item" style="left:70%; animation-delay: 4s;">
+  <img src="/assets/coin.png" class="float-item" style="left:40%; animation-delay: 8s;">
 
   <main class="wrap">
     <h1>🚽 TO THE TOILET</h1>
@@ -133,107 +135,41 @@
     </div>
   </main>
 
-  <!-- Twitter timeline -->
+  <!-- Twitter Feed Embed -->
   <div class="wrap" style="max-width:600px;">
-    <a class="twitter-timeline" data-width="500" data-height="600" data-theme="dark"
-       href="https://twitter.com/WIPE_it_UP?ref_src=twsrc%5Etfw">Tweets by WIPE_it_UP</a>
+    <a class="twitter-timeline"
+       data-width="500"
+       data-height="600"
+       data-theme="dark"
+       href="https://twitter.com/WIPE_it_UP?ref_src=twsrc%5Etfw">
+      Tweets by WIPE_it_UP
+    </a>
     <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
   </div>
 
   <script>
-  // Parallax for video (gentler on mobile)
-  (function(){
-    const video = document.getElementById('bg-video');
-    const isMobile = matchMedia('(max-width:768px)').matches;
-    let tx=0,ty=0,cx=0,cy=0;
-    const max = isMobile ? 8 : 15, ease = 0.05;
-
-    function set(x,y){
-      const nx = (x/innerWidth)*2-1, ny = (y/innerHeight)*2-1;
-      tx = nx*max; ty = ny*max;
-    }
-    addEventListener('mousemove', e=>set(e.clientX,e.clientY), {passive:true});
-    addEventListener('touchmove', e=>{ if(e.touches[0]) set(e.touches[0].clientX,e.touches[0].clientY) }, {passive:true});
-
-    (function loop(){
-      cx += (tx-cx)*ease; cy += (ty-cy)*ease;
-      video.style.transform = `translate(-50%,-50%) scale(1.05) translate(${cx.toFixed(2)}px,${cy.toFixed(2)}px)`;
-      requestAnimationFrame(loop);
+    // Parallax for background video
+    (function(){
+      const video = document.getElementById('bg-video');
+      let tx = 0, ty = 0, cx = 0, cy = 0;
+      const max = 15, ease = 0.05;
+      function set(x,y){
+        const nx = (x / innerWidth) * 2 - 1;
+        const ny = (y / innerHeight) * 2 - 1;
+        tx = nx * max;
+        ty = ny * max;
+      }
+      addEventListener('mousemove', e => set(e.clientX, e.clientY), {passive:true});
+      addEventListener('touchmove', e => {
+        if(e.touches[0]) set(e.touches[0].clientX, e.touches[0].clientY);
+      }, {passive:true});
+      (function loop(){
+        cx += (tx - cx) * ease;
+        cy += (ty - cy) * ease;
+        video.style.transform = `translate(-50%, -50%) scale(1.05) translate(${cx.toFixed(2)}px, ${cy.toFixed(2)}px)`;
+        requestAnimationFrame(loop);
+      })();
     })();
-
-    // Respect prefers-reduced-motion
-    if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      video.pause(); video.removeAttribute('loop');
-    }
-  })();
-
-  // Floating objects + lighter mobile settings
-  (function(){
-    const layer = document.getElementById('floatLayer');
-    const isMobile = matchMedia('(max-width:768px)').matches;
-
-    function reset(el){
-      const x = Math.random()*innerWidth;
-      el.style.setProperty('--x', `${x - innerWidth*0.5}px`);
-      el.style.setProperty('--moveX', `${(Math.random()*180-90).toFixed(0)}px`);
-      el.style.left = `${x}px`;
-      el.style.top  = `${innerHeight + 60}px`;
-      const s = isMobile ? (0.7 + Math.random()*0.5) : (0.8 + Math.random()*0.8);
-      el.style.transform = `scale(${s})`;
-      el.style.opacity = 0.001;
-    }
-
-    function sparkle(el, lighter=false){
-      const r = el.getBoundingClientRect();
-      const sp = document.createElement('div');
-      sp.className='sparkle';
-      sp.style.left = (r.left + r.width/2 + (Math.random()*10-5)) + 'px';
-      sp.style.top  = (r.top  + r.height/2 + (Math.random()*10-5)) + 'px';
-      document.body.appendChild(sp);
-      const life = (lighter?600:700) + Math.random()*400, t0 = performance.now();
-      (function tick(t){
-        const k = Math.min(1,(t-t0)/life); const up = -60*k;
-        sp.style.transform = `translate(-50%,-50%) translateY(${up}px) scale(${1-k*0.5})`;
-        sp.style.opacity = (1-k).toFixed(2);
-        if(k<1) requestAnimationFrame(tick); else sp.remove();
-      })(t0);
-    }
-
-    function attach(el){
-      reset(el);
-      const baseMin = isMobile ? 18 : 14;
-      const baseMax = isMobile ? 24 : 20;
-      el.style.setProperty('--dur', (baseMin + Math.random()*(baseMax-baseMin))+'s');
-
-      let id = setInterval(()=>sparkle(el, true), isMobile ? 420 : 260);
-      el.addEventListener('animationiteration', ()=>{
-        clearInterval(id); reset(el);
-        id = setInterval(()=>sparkle(el, true), isMobile ? 420 : 260);
-      });
-    }
-
-    // Seed elements (trim on mobile)
-    const seeds = Array.from(layer.querySelectorAll('.float'));
-    if (isMobile && seeds.length > 3) seeds.slice(3).forEach(n=>n.remove());
-    (isMobile ? seeds.slice(0,3) : seeds).forEach(attach);
-
-    // Spawn new floaters periodically (slower on mobile)
-    setInterval(()=>{
-      const imgs=['/assets/coin.png','/assets/tp-roll.png'];
-      // keep population small on mobile
-      if (isMobile && layer.querySelectorAll('.float').length >= 4) return;
-      const el=document.createElement('img');
-      el.src = imgs[Math.random()<0.55?0:1];
-      el.className='float';
-      layer.appendChild(el);
-      attach(el);
-    }, isMobile ? 7000 : 4500);
-
-    // Reduced motion
-    if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      document.querySelectorAll('.float').forEach(el=>el.style.animation='none');
-    }
-  })();
   </script>
 </body>
 </html>
