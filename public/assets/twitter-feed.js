@@ -1,17 +1,22 @@
-fetch('/api/twitter-media?user=WIPE_it_UP', { cache: 'no-store' })
-  .then(r => r.json())
-  .then(data => {
-    const el = document.getElementById('tweets');
-    if (!data?.data) {
-      el.textContent = data?.error ? `Tweets unavailable: ${data.error}` : 'No tweets.';
+async function loadTweets() {
+  const el = document.getElementById('tweets');
+  try {
+    const res = await fetch('/api/twitter-media'); // allow caches to work
+    const data = await res.json();
+
+    if (!data?.data?.length) {
+      el.textContent = 'No tweets yet.';
       return;
     }
+
     el.innerHTML = data.data.map(t => `
       <div class="tweet">
         <p>${t.text.replace(/</g,'&lt;')}</p>
         <time>${new Date(t.created_at).toLocaleString()}</time>
       </div>
     `).join('');
-  })
-  .catch(() => (document.getElementById('tweets').textContent = 'Could not load tweets.'));
-
+  } catch {
+    el.textContent = 'Tweets temporarily unavailable.';
+  }
+}
+document.addEventListener('DOMContentLoaded', loadTweets);
