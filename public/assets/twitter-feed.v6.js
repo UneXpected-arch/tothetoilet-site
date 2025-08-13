@@ -1,170 +1,168 @@
-// public/assets/twitter-feed.v6.js
+/* public/assets/twitter-feed.v5.js */
 (() => {
-  const FEED = document.getElementById('twitter-feed');
-  if (!FEED) return;
+  const FEED_SEL = '#twitter-feed';
+  const FEED_LIMIT = 5;
 
-  // Minimal styles for cards/media/links (inline CSS is allowed by your CSP)
-  if (!document.getElementById('tf-style')) {
-    const s = document.createElement('style');
-    s.id = 'tf-style';
-    s.textContent = `
-      #twitter-feed { display: grid; gap: 14px; }
-      .tweet {
-        text-align: left;
-        background: rgba(255,255,255,0.06);
-        border: 1px solid rgba(255,255,255,0.12);
-        border-radius: 12px;
-        padding: 14px 14px 12px;
-      }
-      .tweet-header {
-        font-weight: 700;
-        margin-bottom: 6px;
-        opacity: .9;
-      }
-      .tweet-time { opacity: .7; font-weight: 500; }
-      .tweet-text { margin: 6px 0 8px; line-height: 1.5; }
-      .tweet a { color: var(--gold, #F6C445); text-decoration: underline; }
-      img.tweet-media {
-        display: block; width: 100%; height: auto;
-        border-radius: 10px; margin-top: 10px;
-      }
-    `;
-    document.head.appendChild(s);
-  }
+  const el = document.querySelector(FEED_SEL);
+  if (!el) return;
 
-  // Build a map for media lookup
-  function buildMediaMap(json) {
-    const map = new Map();
-    const media = (json.includes && json.includes.media) || [];
-    media.forEach(m => map.set(m.media_key, m));
-    return map;
-  }
+  const esc = (s) =>
+    String(s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
 
-  // Escape plain text
-  const esc = (s) => s.replace(/[&<>"']/g, c => ({
-    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
-  }[c]));
-
-  // Turn entities into DOM safely (URLs, hashtags, cashtags)
+  // turn plain text into links: URLs, #tags, $tags, @users
   function linkify(text, entities = {}) {
-    const ranges = [];
-    (entities.urls || []).forEach(u => ranges.push({ start: u.start, end: u.end, kind: 'url', u }));
-    (entities.hashtags || []).forEach(h => ranges.push({ start: h.start, end: h.end, kind: 'hashtag', h }));
-    (entities.cashtags || []).forEach(c => ranges.push({ start: c.start, end: c.end, kind: 'cashtag', c }));
-    (entities.mentions || []).forEach(m => ranges.push({ start: m.start, end: m.end, kind: 'mention', m }));
+    let out = esc(text);
 
-    ranges.sort((a, b) => a.start - b.start);
+    // Replace t.co -> expanded URLs if present
+    if (entities.urls && Array.isArray(entities.urls)) {
+      for (const u of entities.urls) {
+        if (!u.url) continue;
+        const find = esc(u.url);
+        const to = esc(u.expanded_url || u.url);
+        const disp = esc(u.display_url || u.expanded_url || u.url);
+        out = out.replace(
+          new RegExp(find.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'),
+          `<a href="${to}" rel="noopener noreferrer" target="_blank">${disp}</a>`
+        );
+      }
+    }
 
-    const frag = document.createDocumentFragment();
-    let pos = 0;
+    // @mentions (Twitter may or may not include entities.mentions)
+    out = out.replace(
+      /(^|[^/\w])@([A-Za-z0-9_]{1,15})\b/g,
+      (_, p, u) => `${p}<a href="https://x.com/${u}" target="_blank" rel="noopener noreferrer">@${u}</a>`
+    );
 
-    const pushText = (str) => frag.appendChild(document.createTextNode(str));
+    // #hashtags
+    out = out.replace(
+      /(^|[^/\w])#([A-Za-z0-9_]+)\b/g,
+      (_, p, tag) =>
+        `${p}<a href="https://x.com/hashtag/${encodeURIComponent(tag)}" target="_blank" rel="noopener noreferrer">#${tag}</a>`
+    );
 
-    ranges.forEach(r => {
-      if (r.start > pos) pushText(text.slice(pos, r.start));
+    // $cashtags (crypto style)
+    out = out.replace(
+      /(^|[^/\w])\$(\w+)\b/g,
+      (_, p, t) =>
+        `${p}<a href="https://x.com/search?q=%24${encodeURIComponent(t)}&src=cashtag_click" target="_blank" rel="noopener noreferrer">$${t}</a>`
+    );
 
-      if (r.kind === 'url') {
-        const a = document.createElement('a');
-        a.href = r.u.expanded_url || r.u.unwound_url || r.u.url;
-        a.textContent = r.u.display_url || (r.u.expanded_url || r.u.url).replace(/^https?:\/\//, '');
-        a.target = '_blank';
-        a.rel = 'noopener noreferrer nofollow';
-        frag.appendChild(a);
-      } else if (r.kind === 'hashtag') {
-        const tag = r.h.tag;
-        const a = document.createElement('a');
-        a.href = `https://x.com/hashtag/${encodeURIComponent(tag)}?src=hashtag_click`;
-        a.textContent = `#${tag}`;
-        a.target = '_blank';
-        a.rel = 'noopener noreferrer nofollow';
-        frag.appendChild(a);
-      } else if (r.kind === 'cashtag') {
-        const tag = r.c.tag;
-        const a = document.createElement('a');
-        a.href = `https://x.com/search?q=%24${encodeURIComponent(tag)}&src=cashtag_click`;
-        a.textContent = `$${tag}`;
-        a.target = '_blank';
-        a.rel = 'noopener noreferrer nofollow';
-        frag.appendChild(a);
-      } else if (r.kind === 'mention') {
-        const u = r.m.username;
-        const a = document.createElement('a');
-        a.href = `https://x.com/${encodeURIComponent(u)}`;
-        a.textContent = `@${u}`;
-        a.target = '_blank';
-        a.rel = 'noopener noreferrer nofollow';
-        frag.appendChild(a);
+    return out;
+  }
+
+  function timeAgo(iso) {
+    try {
+      const d = new Date(iso);
+      const diff = (Date.now() - d.getTime()) / 1000;
+      if (diff < 60) return `${Math.floor(diff)}s`;
+      if (diff < 3600) return `${Math.floor(diff / 60)}m`;
+      if (diff < 86400) return `${Math.floor(diff / 3600)}h`;
+      return d.toLocaleString();
+    } catch {
+      return iso;
+    }
+  }
+
+  function renderTweet(t, usersById, mediaByKey) {
+    const user = usersById[t.author_id] || {};
+    const txt = linkify(t.text || '', t.entities);
+    const when = timeAgo(t.created_at);
+    const metrics = t.public_metrics || {};
+    const urlToTweet = `https://x.com/${user.username || 'i'}/status/${t.id}`;
+
+    // First photo (if any)
+    let mediaHTML = '';
+    if (t.attachments && Array.isArray(t.attachments.media_keys)) {
+      const photo = t.attachments.media_keys
+        .map((k) => mediaByKey[k])
+        .find((m) => m && m.type === 'photo' && m.url);
+      if (photo) {
+        const src = photo.url;
+        mediaHTML = `
+          <a class="tw-media" href="${urlToTweet}" target="_blank" rel="noopener noreferrer">
+            <img loading="lazy" src="${src}" alt="Tweet media">
+          </a>`;
+      }
+    }
+
+    return `
+      <article class="tweet">
+        <header class="tweet-hd">
+          <div class="tweet-user">
+            <div class="tweet-name">${esc(user.name || '')}</div>
+            <div class="tweet-handle">@${esc(user.username || '')}</div>
+          </div>
+          <a class="tweet-time" href="${urlToTweet}" target="_blank" rel="noopener noreferrer">${when}</a>
+        </header>
+        <div class="tweet-text">${txt}</div>
+        ${mediaHTML}
+        <footer class="tweet-ft">
+          <a href="${urlToTweet}" target="_blank" rel="noopener noreferrer" class="tweet-open">Open on X</a>
+          <div class="tweet-metrics">
+            <span>❤ ${metrics.like_count ?? 0}</span>
+            <span>↩︎ ${metrics.reply_count ?? 0}</span>
+            <span>🔁 ${metrics.retweet_count ?? 0}</span>
+          </div>
+        </footer>
+      </article>
+    `;
+  }
+
+  async function load() {
+    try {
+      const r = await fetch('/api/twitter-media', { credentials: 'same-origin' });
+      if (!r.ok) throw new Error('feed fetch failed');
+      const j = await r.json();
+
+      const usersById = {};
+      const mediaByKey = {};
+
+      (j.includes?.users || []).forEach((u) => (usersById[u.id] = u));
+      (j.includes?.media || []).forEach((m) => (mediaByKey[m.media_key] = m));
+
+      const tweets = (j.data || []).slice(0, FEED_LIMIT);
+
+      if (!tweets.length) {
+        el.innerHTML = `<div class="tweet-empty">No tweets yet.</div>`;
+        return;
       }
 
-      pos = r.end;
-    });
-
-    if (pos < text.length) pushText(text.slice(pos));
-    return frag;
+      el.innerHTML =
+        `<div class="tweet-list">` +
+        tweets.map((t) => renderTweet(t, usersById, mediaByKey)).join('') +
+        `</div>`;
+    } catch (e) {
+      console.error(e);
+      el.innerHTML = `<div class="tweet-error">Couldn’t load tweets right now.</div>`;
+    }
   }
 
-  function renderTweets(json) {
-    FEED.innerHTML = '';
-    const users = (json.includes && json.includes.users) || [];
-    const byId = Object.fromEntries(users.map(u => [u.id, u]));
-    const mMap = buildMediaMap(json);
-
-    (json.data || []).forEach(t => {
-      const u = byId[t.author_id] || {};
-      const card = document.createElement('article');
-      card.className = 'tweet';
-
-      // Header: Name @user • time
-      const h = document.createElement('div');
-      h.className = 'tweet-header';
-      const when = new Date(t.created_at);
-      const time = document.createElement('span');
-      time.className = 'tweet-time';
-      time.textContent = ` • ${when.toLocaleString()}`;
-      h.appendChild(document.createTextNode(`${u.name || ''}${u.username ? ' @' + u.username : ''}`));
-      h.appendChild(time);
-      card.appendChild(h);
-
-      // Text with links
-      const p = document.createElement('div');
-      p.className = 'tweet-text';
-      p.appendChild(linkify(t.text || '', t.entities));
-      card.appendChild(p);
-
-      // Photos
-      const keys = (t.attachments && t.attachments.media_keys) || [];
-      keys.forEach(k => {
-        const m = mMap.get(k);
-        if (!m) return;
-        if (m.type === 'photo' && m.url) {
-          const img = document.createElement('img');
-          img.className = 'tweet-media';
-          img.src = m.url;             // allowed by CSP: pbs.twimg.com
-          img.alt = 'Tweet image';
-          img.loading = 'lazy';
-          card.appendChild(img);
-        }
-        // videos/animated_gif can be linked to the tweet if needed
-      });
-
-      FEED.appendChild(card);
-    });
+  // minimal styles (scoped to #twitter-feed)
+  const css = `
+  #twitter-feed { text-align:left; }
+  #twitter-feed .tweet-list { display:grid; gap:14px; }
+  #twitter-feed .tweet {
+    background: rgba(8,20,38,.7);
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:14px; padding:14px; color:#e9f0f7;
   }
+  #twitter-feed a { color:#F6C445; text-decoration:none; }
+  #twitter-feed a:hover { text-decoration:underline; }
+  #twitter-feed .tweet-hd { display:flex; justify-content:space-between; align-items:baseline; gap:10px; margin-bottom:6px; }
+  #twitter-feed .tweet-name { font-weight:700; }
+  #twitter-feed .tweet-handle { opacity:.8; font-size:.9em; }
+  #twitter-feed .tweet-time { opacity:.75; font-size:.85em; }
+  #twitter-feed .tweet-text { line-height:1.35; margin:6px 0 8px; word-wrap:anywhere; }
+  #twitter-feed .tw-media img { width:100%; height:auto; border-radius:10px; display:block; margin-top:8px; }
+  #twitter-feed .tweet-ft { display:flex; justify-content:space-between; align-items:center; margin-top:8px; font-size:.9em; opacity:.9;}
+  #twitter-feed .tweet-metrics { display:flex; gap:12px; }
+  `;
+  const style = document.createElement('style');
+  style.textContent = css;
+  document.head.appendChild(style);
 
-  function fetchTweets() {
-    fetch(`/api/twitter-media?_=${Date.now()}`, { cache: 'no-store', credentials: 'omit' })
-      .then(r => r.json())
-      .then(j => renderTweets(j))
-      .catch(err => {
-        FEED.textContent = 'Could not load tweets.';
-        console.error('Twitter feed error', err);
-      });
-  }
-
-  // expose for manual refresh if needed
-  window.renderTweets = renderTweets;
-
-  fetchTweets();
-  // Optional: refresh every minute
-  setInterval(fetchTweets, 60000);
+  load();
 })();
