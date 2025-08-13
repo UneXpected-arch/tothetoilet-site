@@ -1,13 +1,12 @@
 // /public/assets/twitter-feed.js
-// Fetches from /api/twitter-media (cached via Redis) and renders tweets
-// - Linkifies URLs, hashtags, mentions via entities
-// - Shows attached images/GIF previews
-// - Displays like/retweet/reply counts + time
-// - CSP-safe (no inline/eval)
+// Renders tweets from /api/twitter-media (your cached API).
+// No eval/inline JS. CSP-safe.
 
-document.addEventListener('DOMContentLoaded', async () => {
-  const list = document.getElementById('tweet-list');
-  const wrap = document.getElementById('tweets');
+document.addEventListener('DOMContentLoaded', initTweets);
+
+async function initTweets() {
+  // Accept either the old #twitter-feed div or the newer #tweet-list in a wrapper
+  const list = document.getElementById('tweet-list') || document.getElementById('twitter-feed');
   if (!list) return;
 
   // Skeleton while loading
@@ -25,31 +24,31 @@ document.addEventListener('DOMContentLoaded', async () => {
     const includes = data?.includes || {};
     const mediaArr = includes.media || [];
     const usersArr = includes.users || [];
-    const user = usersArr[0] || null;
 
+    // We expect one user: the account we fetched by ID
+    const user = usersArr[0] || null;
     const mediaByKey = Object.fromEntries(mediaArr.map(m => [m.media_key, m]));
 
     if (!tweets.length) {
-      list.innerHTML = '<div class="tweet">No tweets yet.</div>';
+      list.innerHTML = `<div class="tweet">No tweets yet.</div>`;
       return;
     }
 
     list.innerHTML = tweets.map(t => renderTweet(t, user, mediaByKey)).join('');
   } catch (err) {
     console.error('Tweet feed error:', err);
-    if (wrap) wrap.style.opacity = '0.9';
-    list.innerHTML = '<div class="tweet">Tweets temporarily unavailable.</div>';
+    list.innerHTML = `<div class="tweet">Tweets temporarily unavailable.</div>`;
   }
-});
+}
 
 function renderTweet(t, user, mediaByKey) {
   const textRaw = t?.text || '';
   const textHtml = linkify(escapeHtml(textRaw), t?.entities);
   const when = formatWhen(t?.created_at);
-  const m = t?.public_metrics || {};
+  const m = t?.public_metrics || { like_count:0, retweet_count:0, reply_count:0 };
   const tweetUrl = user ? `https://x.com/${encodeURIComponent(user.username)}/status/${t.id}` : '#';
 
-  // Media block
+  // Media
   let mediaHtml = '';
   const keys = t?.attachments?.media_keys || [];
   if (keys.length) {
@@ -89,30 +88,35 @@ function renderTweet(t, user, mediaByKey) {
 </article>`.trim();
 }
 
-// Linkify using entity indices (works on already-escaped text)
+/* ---------- helpers ---------- */
+
 function linkify(escaped, entities) {
   if (!entities) return escaped;
   const reps = [];
 
+  // URLs
   (entities.urls || []).forEach(u => {
     const href = u.expanded_url || u.url;
     const label = escapeHtml(u.display_url || u.url);
     reps.push([u.start, u.end, `<a href="${href}" target="_blank" rel="noopener">${label}</a>`]);
   });
 
+  // Hashtags
   (entities.hashtags || []).forEach(h => {
     const tag = h.tag;
     const href = `https://x.com/hashtag/${encodeURIComponent(tag)}`;
     reps.push([h.start, h.end, `<a href="${href}" target="_blank" rel="noopener">#${escapeHtml(tag)}</a>`]);
   });
 
+  // Mentions
   (entities.mentions || []).forEach(m => {
     const uname = m.username;
     const href = `https://x.com/${encodeURIComponent(uname)}`;
     reps.push([m.start, m.end, `<a href="${href}" target="_blank" rel="noopener">@${escapeHtml(uname)}</a>`]);
   });
 
-  reps.sort((a,b)=>b[0]-a[0]); // apply from end
+  // Apply from end to start to preserve indices
+  reps.sort((a,b)=>b[0]-a[0]);
   let s = escaped;
   for (const [start, end, frag] of reps) {
     s = s.slice(0, start) + frag + s.slice(end);
@@ -125,7 +129,7 @@ function escapeHtml(s) {
     { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]
   ));
 }
-function escapeAttr(s){ return escapeHtml(s).replace(/"/g, '&quot;'); }
+function escapeAttr(s){ return escapeHtml(s).replace(/"/g,'&quot;'); }
 function fmt(n){ return typeof n === 'number' ? n.toLocaleString() : '0'; }
 function formatWhen(iso){
   if (!iso) return '';
