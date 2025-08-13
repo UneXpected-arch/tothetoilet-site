@@ -1,4 +1,4 @@
-// /public/assets/twitter-feed.v4.js
+// Force-fresh, CSP-safe tweet renderer
 document.addEventListener('DOMContentLoaded', initTweets);
 
 async function initTweets() {
@@ -11,39 +11,26 @@ async function initTweets() {
   `;
 
   try {
-    // Add a cache-busting query so we never render an old empty response
-    const url = `/api/twitter-media?_=${Date.now()}`;
-    const res = await fetch(url, { credentials: 'omit', cache: 'no-store' });
-
+    const res = await fetch(`/api/twitter-media?_=${Date.now()}`, { cache: 'no-store', credentials: 'omit' });
     if (!res.ok) {
-      const text = await res.text().catch(() => '');
+      const text = await res.text().catch(()=>'');
       console.warn('tweet feed HTTP error', res.status, text);
       mount.innerHTML = `<div class="tweet">Tweets temporarily unavailable. (${res.status})</div>`;
       return;
     }
-
     const json = await res.json();
-    console.debug('tweet feed raw json:', json);
+    console.debug('tweet feed JSON:', json);
 
     const tweets = Array.isArray(json?.data) ? json.data : [];
     const includes = json?.includes || {};
     const mediaArr = includes.media || [];
     const usersArr = includes.users || [];
 
-    // Build quick lookup tables
     const mediaByKey = Object.fromEntries(mediaArr.map(m => [m.media_key, m]));
     const authorsById = Object.fromEntries(usersArr.map(u => [u.id, u]));
 
     if (!tweets.length) {
-      // Show why (diagnostic)
-      const diag = document.createElement('pre');
-      diag.style.fontSize = '11px';
-      diag.style.opacity = '0.75';
-      diag.style.whiteSpace = 'pre-wrap';
-      diag.textContent = 'No tweets in data[]. This can be rate-limit cache or empty timeline.\n' +
-                         'If you see a tweet at /api/twitter-media in the browser, hard refresh here.';
       mount.innerHTML = `<div class="tweet">No tweets yet.</div>`;
-      mount.appendChild(diag);
       return;
     }
 
@@ -55,19 +42,17 @@ async function initTweets() {
 }
 
 function renderTweet(t, user, mediaByKey) {
-  const textHtml = linkify(esc(t.text || ''), t.entities);
-  const when = formatWhen(t.created_at);
-  const m = t.public_metrics || {};
+  const textHtml = linkify(esc(t?.text || ''), t?.entities);
+  const when = formatWhen(t?.created_at);
+  const m = t?.public_metrics || {};
   const tweetUrl = user ? `https://x.com/${encodeURIComponent(user.username)}/status/${t.id}` : '#';
 
-  // avatar (only if provided by API)
   const avatar = user?.profile_image_url
     ? `<img class="tweet-avatar" src="${user.profile_image_url}" alt="${escAttr(user.name || 'User')}">`
     : '';
 
-  // media
   let mediaHtml = '';
-  const keys = t.attachments?.media_keys || [];
+  const keys = t?.attachments?.media_keys || [];
   if (keys.length) {
     mediaHtml = keys.map(k => {
       const md = mediaByKey[k];
@@ -89,7 +74,7 @@ function renderTweet(t, user, mediaByKey) {
   <div class="tweet-text">${textHtml}</div>
   ${mediaHtml}
   <footer class="tweet-meta">
-    <time datetime="${t.created_at ? new Date(t.created_at).toISOString() : ''}">${when}</time>
+    <time datetime="${t?.created_at ? new Date(t.created_at).toISOString() : ''}">${when}</time>
     <span>❤ ${fmt(m.like_count)}</span>
     <span>🔁 ${fmt(m.retweet_count)}</span>
     <span>💬 ${fmt(m.reply_count)}</span>
@@ -123,6 +108,3 @@ function esc(s){return (s||'').replace(/[&<>"']/g,c=>({ '&':'&amp;','<':'&lt;','
 function escAttr(s){return esc(s).replace(/"/g,'&quot;');}
 function fmt(n){return typeof n==='number'? n.toLocaleString() : '0';}
 function formatWhen(iso){ if(!iso) return ''; const d=new Date(iso); return d.toLocaleString(undefined,{year:'numeric',month:'short',day:'2-digit',hour:'2-digit',minute:'2-digit'}); }
-<!-- at the very end of <body> -->
-<script src="/assets/app.v2.js" defer></script>
-<script src="/assets/twitter-feed.v4.js" defer></script>
