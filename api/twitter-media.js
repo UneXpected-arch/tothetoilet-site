@@ -5,6 +5,13 @@ export default async function handler(req, res) {
 
   if (!token || !userId) {
     // never cache errors either
+    res.setHeader('Cache-Control','no-store, no-cache, must-revalidate, proxy-revalidate');
+res.setHeader('Pragma','no-cache');
+res.setHeader('Expires','0');
+res.setHeader('Surrogate-Control','no-store');
+res.setHeader('CDN-Cache-Control','no-store');
+res.setHeader('Vercel-CDN-Cache-Control','no-store');
+
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
     return res.status(500).json({ error: 'Missing TWITTER_BEARER_TOKEN or TWITTER_USER_ID' });
   }
