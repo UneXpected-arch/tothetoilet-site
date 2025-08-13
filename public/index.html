@@ -6,6 +6,11 @@
   <title>🚽 To The Toilet — WIPE Game</title>
   <link rel="icon" type="image/png" href="/game/assets/favicon.png" />
 
+  <!-- Preconnect for faster Twitter embed -->
+  <link rel="preconnect" href="https://platform.twitter.com" crossorigin>
+  <link rel="preconnect" href="https://cdn.syndication.twimg.com" crossorigin>
+  <link rel="preconnect" href="https://pbs.twimg.com" crossorigin>
+
   <!-- Open Graph -->
   <meta property="og:title" content="🚽 To The Toilet — WIPE Game" />
   <meta property="og:description" content="💦 Flush your debt, catch the gains! Can YOU scoop the profits before they get flushed forever?" />
@@ -20,33 +25,19 @@
   <meta name="twitter:description" content="💦 Flush your debt, catch the gains! Can YOU scoop the profits before they get flushed forever?" />
   <meta name="twitter:image" content="https://www.tothetoilet.xyz/assets/social-card.png" />
 
-  <!-- CSP allowing only needed Twitter domains for images -->
-  <meta http-equiv="Content-Security-Policy"
-  content="
+  <!-- CSP: strict, but allows Twitter embed (no 'unsafe-eval') -->
+  <meta http-equiv="Content-Security-Policy" content="
     default-src 'self';
     base-uri 'self';
     form-action 'self';
 
-    /* scripts: only our own files */
-    script-src 'self';
-
-    /* allow inline styles we set in the page */
+    script-src 'self' https://platform.twitter.com https://cdn.syndication.twimg.com;
     style-src 'self' 'unsafe-inline';
-
-    /* allow images from our site + Twitter's image CDNs + data: URIs */
-    img-src 'self' https://pbs.twimg.com https://abs.twimg.com data:;
-
-    /* video/audio from our own origin only */
+    img-src 'self' data: https://pbs.twimg.com https://abs.twimg.com;
     media-src 'self';
-
-    /* fonts from our own origin */
     font-src 'self';
-
-    /* network calls: our own origin (includes /api/twitter-media) */
-    connect-src 'self';
-
-    /* no iframes/embeds */
-    frame-src 'none';
+    connect-src 'self' https://cdn.syndication.twimg.com https://syndication.twitter.com https://api.twitter.com;
+    frame-src https://platform.twitter.com https://syndication.twitter.com;
   ">
 
   <style>
@@ -150,18 +141,24 @@
     <div class="sub">
       Powered by the WIPE community • #WIPEcoin
       <br/>
-      <a class="twitter-btn" href="https://twitter.com/WIPE_it_UP" target="_blank">🐦 Follow us on Twitter</a>
+      <a class="twitter-btn" href="https://twitter.com/WIPE_it_UP" target="_blank" rel="noopener">🐦 Follow us on Twitter</a>
     </div>
   </main>
 
-  <!-- Twitter feed container -->
+  <!-- Native Twitter embed (no Bearer token needed) -->
   <div class="wrap" style="max-width:600px;">
-    <div id="twitter-feed"></div>
+    <a class="twitter-timeline"
+       data-width="500"
+       data-height="600"
+       data-theme="dark"
+       href="https://twitter.com/WIPE_it_UP?ref_src=twsrc%5Etfw">
+      Tweets by WIPE_it_UP
+    </a>
   </div>
 
+  <!-- Your site JS (floaters/parallax/etc.) -->
   <script src="/assets/app.js" defer></script>
-<script src="/assets/twitter-feed.js?v=6" defer></script>
-
-
+  <!-- Twitter widget loader (required for the timeline) -->
+  <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
 </body>
 </html>
