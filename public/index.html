@@ -24,15 +24,29 @@
   <meta http-equiv="Content-Security-Policy"
   content="
     default-src 'self';
-    script-src 'self';
-    style-src 'self' 'unsafe-inline';
-    img-src 'self' data: https://pbs.twimg.com https://abs.twimg.com;
-    media-src 'self';
-    font-src 'self';
-    connect-src 'self';
-    frame-src 'none';
     base-uri 'self';
     form-action 'self';
+
+    /* scripts: only our own files */
+    script-src 'self';
+
+    /* allow inline styles we set in the page */
+    style-src 'self' 'unsafe-inline';
+
+    /* allow images from our site + Twitter's image CDNs + data: URIs */
+    img-src 'self' https://pbs.twimg.com https://abs.twimg.com data:;
+
+    /* video/audio from our own origin only */
+    media-src 'self';
+
+    /* fonts from our own origin */
+    font-src 'self';
+
+    /* network calls: our own origin (includes /api/twitter-media) */
+    connect-src 'self';
+
+    /* no iframes/embeds */
+    frame-src 'none';
   ">
 
   <style>
