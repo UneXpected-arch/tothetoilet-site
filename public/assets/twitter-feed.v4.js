@@ -1,17 +1,15 @@
 export default async function handler(req, res) {
-  const token = process.env.TWITTER_BEARER_TOKEN;
-  const userId = process.env.TWITTER_USER_ID;
-
-  // Hard no-cache everywhere
-  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
   res.setHeader('Pragma', 'no-cache');
   res.setHeader('Expires', '0');
+  res.setHeader('Surrogate-Control', 'no-store');
   res.setHeader('CDN-Cache-Control', 'no-store');
   res.setHeader('Vercel-CDN-Cache-Control', 'no-store');
-  res.setHeader('Surrogate-Control', 'no-store');
 
+  const token = process.env.TWITTER_BEARER_TOKEN;
+  const userId = process.env.TWITTER_USER_ID;
   if (!token || !userId) {
-    return res.status(500).json({ error: 'Missing TWITTER_BEARER_TOKEN or TWITTER_USER_ID' });
+    return res.status(500).json({ error: 'Missing credentials' });
   }
 
   try {
@@ -25,7 +23,7 @@ export default async function handler(req, res) {
     });
 
     const upstream = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
-    const text = await upstream.text(); // avoid body reuse/etag surprises
+    const text = await upstream.text();
     return res.status(upstream.status).type('application/json').send(text);
   } catch (e) {
     return res.status(500).json({ error: 'Server error', detail: String(e) });
