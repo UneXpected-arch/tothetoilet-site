@@ -6,6 +6,21 @@
   <title>🚽 To The Toilet — WIPE Game</title>
   <link rel="icon" type="image/png" href="/game/assets/favicon.png" />
 
+  <!-- Strict CSP: no inline/eval, no third-party scripts -->
+  <meta http-equiv="Content-Security-Policy"
+        content="
+          default-src 'self';
+          script-src 'self';
+          style-src 'self' 'unsafe-inline';
+          img-src 'self' data:;
+          media-src 'self';
+          font-src 'self';
+          connect-src 'self';
+          frame-src 'none';
+          base-uri 'self';
+          form-action 'self';
+        ">
+
   <!-- Open Graph -->
   <meta property="og:title" content="🚽 To The Toilet — WIPE Game" />
   <meta property="og:description" content="💦 Flush your debt, catch the gains! Can YOU scoop the profits before they get flushed forever?" />
@@ -13,7 +28,7 @@
   <meta property="og:url" content="https://www.tothetoilet.xyz" />
   <meta property="og:type" content="website" />
 
-  <!-- Twitter Card -->
+  <!-- Twitter Card (metadata only; no scripts) -->
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:site" content="@WIPE_it_UP" />
   <meta name="twitter:title" content="🚽 To The Toilet — WIPE Game" />
@@ -87,25 +102,12 @@
     .sub{ opacity:.85; font-size:14px; margin-top:10px }
     .twitter-btn{ display:inline-block; margin-top:8px; background:var(--blue); color:var(--text); padding:8px 14px; border-radius:8px; font-weight:600; text-decoration:none; }
 
-    #tweets-wrap h2 {
-      color: var(--gold);
-      margin-bottom: 12px;
-      text-shadow: 0 0 8px rgba(246,196,69,.7);
-    }
-    .tweet {
-      text-align: left;
-      padding: 10px;
-      border-bottom: 1px solid rgba(255,255,255,0.1);
-    }
-    .tweet p {
-      margin-bottom: 4px;
-    }
-    .tweet small {
-      opacity: 0.7;
-      font-size: 12px;
-    }
+    /* Tweets list */
+    #tweets-wrap h2 { color: var(--gold); margin-bottom: 12px; text-shadow: 0 0 8px rgba(246,196,69,.7); }
+    .tweets { display:flex; flex-direction:column; gap:12px; margin-top:10px; }
+    .tweet { text-align:left; padding:12px 16px; border-radius:10px; border:1px solid rgba(255,255,255,.1); background:rgba(14,35,65,.85); box-shadow:0 4px 14px rgba(0,0,0,.2); }
+    .tweet time { display:block; font-size:12px; opacity:.7; margin-top:6px; }
 
-    /* Mobile tweaks */
     @media (max-width:768px){
       .float-item{ width:40px; }
       .wrap{ padding:26px 18px; }
@@ -115,6 +117,10 @@
       .emoji{ animation:none !important }
     }
   </style>
+
+  <!-- External JS (same-origin) to satisfy CSP -->
+  <script src="/assets/app.js" defer></script>
+  <script src="/assets/twitter-feed.js" defer></script>
 </head>
 <body>
   <!-- Background video -->
@@ -138,101 +144,14 @@
     <div class="sub">
       Powered by the WIPE community • #WIPEcoin
       <br/>
-      <a class="twitter-btn" href="https://twitter.com/WIPE_it_UP" target="_blank">🐦 Follow us on Twitter</a>
+      <a class="twitter-btn" href="https://twitter.com/WIPE_it_UP" target="_blank" rel="noopener">🐦 Follow us on Twitter</a>
     </div>
   </main>
 
-  <!-- Custom Tweet Feed (CSP friendly) -->
+  <!-- CSP-safe Tweet Feed (no third-party scripts) -->
   <div class="wrap" id="tweets-wrap" style="max-width:600px;">
     <h2>Latest Tweets</h2>
-    <div id="tweets">Loading tweets...</div>
+    <div id="tweets" class="tweets">Loading tweets...</div>
   </div>
-
-  <script>
-    // Parallax background
-    (function(){
-      const video = document.getElementById('bg-video');
-      const isMobile = matchMedia('(max-width:768px)').matches;
-      let tx=0,ty=0,cx=0,cy=0;
-      const max = isMobile ? 8 : 15, ease = 0.05;
-      function set(x,y){ const nx = (x/innerWidth)*2-1, ny = (y/innerHeight)*2-1; tx = nx*max; ty = ny*max; }
-      addEventListener('mousemove', e=>set(e.clientX,e.clientY), {passive:true});
-      addEventListener('touchmove', e=>{ if(e.touches[0]) set(e.touches[0].clientX,e.touches[0].clientY) }, {passive:true});
-      (function loop(){ cx += (tx-cx)*ease; cy += (ty-cy)*ease; video.style.transform = `translate(-50%,-50%) scale(1.05) translate(${cx.toFixed(2)}px,${cy.toFixed(2)}px)`; requestAnimationFrame(loop); })();
-      if (matchMedia('(prefers-reduced-motion: reduce)').matches){ try{ video.pause(); video.removeAttribute('loop'); }catch(e){} }
-      function fail(){ document.body.classList.add('no-video'); }
-      video.addEventListener('error', fail, {once:true});
-      setTimeout(()=>{ if (video.readyState < 2) fail(); }, 2000);
-    })();
-
-    // Floaters
-    (function(){
-      const layer = document.getElementById('float-layer');
-      const isMobile = matchMedia('(max-width:768px)').matches;
-      const MAX_MOBILE = 4;
-      function spawnOne(){
-        const img = new Image();
-        img.className = 'float-item';
-        const isCoin = Math.random() < 0.55;
-        img.src  = isCoin ? '/assets/coin.png' : '/assets/tp-roll.png';
-        img.alt  = isCoin ? 'Coin' : 'Toilet Paper Roll';
-        img.style.left = (Math.random() * 92 + 4) + 'vw';
-        img.style.top  = '110vh';
-        const scale = isMobile ? (0.7 + Math.random()*0.5) : (0.8 + Math.random()*0.8);
-        img.style.width = (80 * scale) + 'px';
-        const speed = (isMobile ? 0.6 : 0.9) + Math.random()*0.6;
-        layer.appendChild(img);
-        let y = window.innerHeight + 120, t = 0;
-        (function tick(){
-          t += 1; y -= speed;
-          const sway = Math.sin(t/40) * (isMobile ? 12 : 18);
-          img.style.transform = `translate(${sway}px, ${y}px) rotate(${t*0.6}deg)`;
-          if (t % (isMobile ? 12 : 8) === 0){
-            const sp = document.createElement('div');
-            sp.className = 'sparkle';
-            const r = img.getBoundingClientRect();
-            sp.style.left = (r.left + r.width/2) + 'px';
-            sp.style.top  = (r.top  + r.height*0.7) + 'px';
-            document.body.appendChild(sp);
-            setTimeout(()=>sp.remove(), 850);
-          }
-          if (y > -140) requestAnimationFrame(tick);
-          else img.remove();
-        })();
-      }
-      function loopSpawn(){
-        const count = layer.querySelectorAll('.float-item').length;
-        if (!isMobile && count < 8) spawnOne();
-        if (isMobile && count < MAX_MOBILE) spawnOne();
-      }
-      setInterval(loopSpawn, 900);
-      Promise.all(['/assets/coin.png','/assets/tp-roll.png'].map(src => new Promise(r=>{ const i=new Image(); i.onload=()=>r(true); i.onerror=()=>r(false); i.src=src; }))).then(([coinOK,tpOK])=>{ if(!(coinOK && tpOK)) layer.style.display='none'; });
-    })();
-
-    // Fetch tweets from API
-    fetch('/api/twitter-media')
-      .then(res => res.json())
-      .then(data => {
-        const tweetsEl = document.getElementById('tweets');
-        tweetsEl.innerHTML = '';
-        if (data.data && data.data.length) {
-          data.data.forEach(tweet => {
-            const el = document.createElement('div');
-            el.className = 'tweet';
-            el.innerHTML = `
-              <p>${tweet.text}</p>
-              <small>${new Date(tweet.created_at).toLocaleString()}</small>
-            `;
-            tweetsEl.appendChild(el);
-          });
-        } else {
-          tweetsEl.innerHTML = '<p>No tweets found.</p>';
-        }
-      })
-      .catch(err => {
-        console.error(err);
-        document.getElementById('tweets').innerHTML = '<p>Error loading tweets.</p>';
-      });
-  </script>
 </body>
 </html>
