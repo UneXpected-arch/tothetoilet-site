@@ -1,138 +1,163 @@
-// /public/assets/twitter-feed.js
-// Renders tweets from /api/twitter-media (your cached API).
-// No eval/inline JS. CSP-safe.
+/* public/assets/twitter-feed.js  (v5) */
+(() => {
+  const FEED_SEL = '#twitter-feed';
+  const FEED_LIMIT = 5;
 
-document.addEventListener('DOMContentLoaded', initTweets);
+  const el = document.querySelector(FEED_SEL);
+  if (!el) return;
 
-async function initTweets() {
-  // Accept either the old #twitter-feed div or the newer #tweet-list in a wrapper
-  const list = document.getElementById('tweet-list') || document.getElementById('twitter-feed');
-  if (!list) return;
+  const esc = (s) =>
+    String(s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
 
-  // Skeleton while loading
-  list.innerHTML = `
-    <div class="tweet"><div class="skeleton skeleton-line"></div><div class="skeleton skeleton-line short"></div></div>
-    <div class="tweet"><div class="skeleton skeleton-line"></div><div class="skeleton skeleton-line short"></div></div>
-  `;
+  function linkify(text, entities = {}) {
+    let out = esc(text);
 
-  try {
-    const res = await fetch('/api/twitter-media', { credentials: 'omit' });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-
-    const tweets = data?.data || [];
-    const includes = data?.includes || {};
-    const mediaArr = includes.media || [];
-    const usersArr = includes.users || [];
-
-    // We expect one user: the account we fetched by ID
-    const user = usersArr[0] || null;
-    const mediaByKey = Object.fromEntries(mediaArr.map(m => [m.media_key, m]));
-
-    if (!tweets.length) {
-      list.innerHTML = `<div class="tweet">No tweets yet.</div>`;
-      return;
+    // URLs → expanded links
+    if (entities.urls && Array.isArray(entities.urls)) {
+      for (const u of entities.urls) {
+        if (!u.url) continue;
+        const find = esc(u.url);
+        const to = esc(u.expanded_url || u.url);
+        const disp = esc(u.display_url || u.expanded_url || u.url);
+        out = out.replace(
+          new RegExp(find.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'),
+          `<a href="${to}" rel="noopener noreferrer" target="_blank">${disp}</a>`
+        );
+      }
     }
 
-    list.innerHTML = tweets.map(t => renderTweet(t, user, mediaByKey)).join('');
-  } catch (err) {
-    console.error('Tweet feed error:', err);
-    list.innerHTML = `<div class="tweet">Tweets temporarily unavailable.</div>`;
-  }
-}
+    // @mentions
+    out = out.replace(
+      /(^|[^/\w])@([A-Za-z0-9_]{1,15})\b/g,
+      (_, p, u) => `${p}<a href="https://x.com/${u}" target="_blank" rel="noopener noreferrer">@${u}</a>`
+    );
 
-function renderTweet(t, user, mediaByKey) {
-  const textRaw = t?.text || '';
-  const textHtml = linkify(escapeHtml(textRaw), t?.entities);
-  const when = formatWhen(t?.created_at);
-  const m = t?.public_metrics || { like_count:0, retweet_count:0, reply_count:0 };
-  const tweetUrl = user ? `https://x.com/${encodeURIComponent(user.username)}/status/${t.id}` : '#';
+    // #hashtags
+    out = out.replace(
+      /(^|[^/\w])#([A-Za-z0-9_]+)\b/g,
+      (_, p, tag) =>
+        `${p}<a href="https://x.com/hashtag/${encodeURIComponent(tag)}" target="_blank" rel="noopener noreferrer">#${tag}</a>`
+    );
 
-  // Media
-  let mediaHtml = '';
-  const keys = t?.attachments?.media_keys || [];
-  if (keys.length) {
-    mediaHtml = keys.map(k => {
-      const med = mediaByKey[k];
-      if (!med) return '';
-      const src = med.url || med.preview_image_url;
-      if (!src) return '';
-      return `<img class="tweet-media" src="${src}" alt="${escapeAttr(med.alt_text || 'Tweet media')}">`;
-    }).join('');
+    // $cashtags
+    out = out.replace(
+      /(^|[^/\w])\$(\w+)\b/g,
+      (_, p, t) =>
+        `${p}<a href="https://x.com/search?q=%24${encodeURIComponent(t)}&src=cashtag_click" target="_blank" rel="noopener noreferrer">$${t}</a>`
+    );
+
+    return out;
   }
 
-  const avatar = user?.profile_image_url
-    ? `<img class="tweet-avatar" src="${user.profile_image_url}" alt="${escapeAttr(user.name || 'User')}">`
-    : '';
-
-  return `
-<article class="tweet">
-  <header class="tweet-head">
-    ${avatar}
-    <div class="tweet-identity">
-      <div class="tweet-name">${escapeHtml(user?.name || '')}</div>
-      <div class="tweet-handle">@${escapeHtml(user?.username || '')}</div>
-    </div>
-  </header>
-
-  <div class="tweet-text">${textHtml}</div>
-  ${mediaHtml}
-
-  <footer class="tweet-meta">
-    <time datetime="${t?.created_at ? new Date(t.created_at).toISOString() : ''}">${when}</time>
-    <span>❤ ${fmt(m.like_count)}</span>
-    <span>🔁 ${fmt(m.retweet_count)}</span>
-    <span>💬 ${fmt(m.reply_count)}</span>
-    <a class="tweet-link" href="${tweetUrl}" target="_blank" rel="noopener">View on X ↗</a>
-  </footer>
-</article>`.trim();
-}
-
-/* ---------- helpers ---------- */
-
-function linkify(escaped, entities) {
-  if (!entities) return escaped;
-  const reps = [];
-
-  // URLs
-  (entities.urls || []).forEach(u => {
-    const href = u.expanded_url || u.url;
-    const label = escapeHtml(u.display_url || u.url);
-    reps.push([u.start, u.end, `<a href="${href}" target="_blank" rel="noopener">${label}</a>`]);
-  });
-
-  // Hashtags
-  (entities.hashtags || []).forEach(h => {
-    const tag = h.tag;
-    const href = `https://x.com/hashtag/${encodeURIComponent(tag)}`;
-    reps.push([h.start, h.end, `<a href="${href}" target="_blank" rel="noopener">#${escapeHtml(tag)}</a>`]);
-  });
-
-  // Mentions
-  (entities.mentions || []).forEach(m => {
-    const uname = m.username;
-    const href = `https://x.com/${encodeURIComponent(uname)}`;
-    reps.push([m.start, m.end, `<a href="${href}" target="_blank" rel="noopener">@${escapeHtml(uname)}</a>`]);
-  });
-
-  // Apply from end to start to preserve indices
-  reps.sort((a,b)=>b[0]-a[0]);
-  let s = escaped;
-  for (const [start, end, frag] of reps) {
-    s = s.slice(0, start) + frag + s.slice(end);
+  function timeAgo(iso) {
+    try {
+      const d = new Date(iso);
+      const diff = (Date.now() - d.getTime()) / 1000;
+      if (diff < 60) return `${Math.floor(diff)}s`;
+      if (diff < 3600) return `${Math.floor(diff / 60)}m`;
+      if (diff < 86400) return `${Math.floor(diff / 3600)}h`;
+      return d.toLocaleString();
+    } catch {
+      return iso;
+    }
   }
-  return s;
-}
 
-function escapeHtml(s) {
-  return (s || '').replace(/[&<>"']/g, c => (
-    { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]
-  ));
-}
-function escapeAttr(s){ return escapeHtml(s).replace(/"/g,'&quot;'); }
-function fmt(n){ return typeof n === 'number' ? n.toLocaleString() : '0'; }
-function formatWhen(iso){
-  if (!iso) return '';
-  const d = new Date(iso);
-  return d.toLocaleString(undefined, { year:'numeric', month:'short', day:'2-digit', hour:'2-digit', minute:'2-digit' });
-}
+  function renderTweet(t, usersById, mediaByKey) {
+    const user = usersById[t.author_id] || {};
+    const txt = linkify(t.text || '', t.entities);
+    const when = timeAgo(t.created_at);
+    const metrics = t.public_metrics || {};
+    const urlToTweet = `https://x.com/${user.username || 'i'}/status/${t.id}`;
+
+    // first photo if available
+    let mediaHTML = '';
+    if (t.attachments && Array.isArray(t.attachments.media_keys)) {
+      const photo = t.attachments.media_keys
+        .map((k) => mediaByKey[k])
+        .find((m) => m && m.type === 'photo' && m.url);
+      if (photo) {
+        mediaHTML = `
+          <a class="tw-media" href="${urlToTweet}" target="_blank" rel="noopener noreferrer">
+            <img loading="lazy" src="${photo.url}" alt="Tweet media">
+          </a>`;
+      }
+    }
+
+    return `
+      <article class="tweet">
+        <header class="tweet-hd">
+          <div class="tweet-user">
+            <div class="tweet-name">${esc(user.name || '')}</div>
+            <div class="tweet-handle">@${esc(user.username || '')}</div>
+          </div>
+          <a class="tweet-time" href="${urlToTweet}" target="_blank" rel="noopener noreferrer">${when}</a>
+        </header>
+        <div class="tweet-text">${txt}</div>
+        ${mediaHTML}
+        <footer class="tweet-ft">
+          <a href="${urlToTweet}" target="_blank" rel="noopener noreferrer" class="tweet-open">Open on X</a>
+          <div class="tweet-metrics">
+            <span>❤ ${metrics.like_count ?? 0}</span>
+            <span>↩︎ ${metrics.reply_count ?? 0}</span>
+            <span>🔁 ${metrics.retweet_count ?? 0}</span>
+          </div>
+        </footer>
+      </article>
+    `;
+  }
+
+  async function load() {
+    try {
+      const r = await fetch('/api/twitter-media', { credentials: 'same-origin' });
+      if (!r.ok) throw new Error('feed fetch failed');
+      const j = await r.json();
+
+      const usersById = {};
+      const mediaByKey = {};
+      (j.includes?.users || []).forEach((u) => (usersById[u.id] = u));
+      (j.includes?.media || []).forEach((m) => (mediaByKey[m.media_key] = m));
+
+      const tweets = (j.data || []).slice(0, FEED_LIMIT);
+      if (!tweets.length) {
+        el.innerHTML = `<div class="tweet-empty">No tweets yet.</div>`;
+        return;
+      }
+      el.innerHTML =
+        `<div class="tweet-list">` +
+        tweets.map((t) => renderTweet(t, usersById, mediaByKey)).join('') +
+        `</div>`;
+    } catch (e) {
+      console.error(e);
+      el.innerHTML = `<div class="tweet-error">Couldn’t load tweets right now.</div>`;
+    }
+  }
+
+  // scoped styles
+  const css = `
+  #twitter-feed { text-align:left; }
+  #twitter-feed .tweet-list { display:grid; gap:14px; }
+  #twitter-feed .tweet {
+    background: rgba(8,20,38,.7);
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:14px; padding:14px; color:#e9f0f7;
+  }
+  #twitter-feed a { color:#F6C445; text-decoration:none; }
+  #twitter-feed a:hover { text-decoration:underline; }
+  #twitter-feed .tweet-hd { display:flex; justify-content:space-between; align-items:baseline; gap:10px; margin-bottom:6px; }
+  #twitter-feed .tweet-name { font-weight:700; }
+  #twitter-feed .tweet-handle { opacity:.8; font-size:.9em; }
+  #twitter-feed .tweet-time { opacity:.75; font-size:.85em; }
+  #twitter-feed .tweet-text { line-height:1.35; margin:6px 0 8px; word-wrap:anywhere; }
+  #twitter-feed .tw-media img { width:100%; height:auto; border-radius:10px; display:block; margin-top:8px; }
+  #twitter-feed .tweet-ft { display:flex; justify-content:space-between; align-items:center; margin-top:8px; font-size:.9em; opacity:.9;}
+  #twitter-feed .tweet-metrics { display:flex; gap:12px; }
+  `;
+  const style = document.createElement('style');
+  style.textContent = css;
+  document.head.appendChild(style);
+
+  load();
+})();
