@@ -6,22 +6,11 @@
   <title>🚽 To The Toilet — WIPE Game</title>
   <link rel="icon" type="image/png" href="/game/assets/favicon.png" />
 
-  <!-- Strict CSP: no inline/eval; only same-origin assets -->
+  <!-- Strict CSP (no inline/eval) -->
   <meta http-equiv="Content-Security-Policy"
-        content="
-          default-src 'self';
-          script-src 'self';
-          style-src 'self' 'unsafe-inline';
-          img-src 'self' data:;
-          media-src 'self';
-          font-src 'self';
-          connect-src 'self';
-          frame-src 'none';
-          base-uri 'self';
-          form-action 'self';
-        ">
+        content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self'; font-src 'self'; connect-src 'self'; frame-src 'none'; base-uri 'self'; form-action 'self';">
 
-  <!-- Open Graph / Twitter metadata (no scripts) -->
+  <!-- Open Graph / Twitter -->
   <meta property="og:title" content="🚽 To The Toilet — WIPE Game" />
   <meta property="og:description" content="💦 Flush your debt, catch the gains! Can YOU scoop the profits before they get flushed forever?" />
   <meta property="og:image" content="https://www.tothetoilet.xyz/assets/social-card.png" />
@@ -95,14 +84,57 @@
     .cta:hover{ box-shadow:0 8px 24px rgba(246,196,69,1), 0 6px 0 #caa02b }
     .cta:active{ transform:translateY(2px); box-shadow:0 4px 0 #caa02b }
     .sub{ opacity:.85; font-size:14px; margin-top:10px }
-    .twitter-btn{ display:inline-block; margin-top:8px; background:var(--blue);
-      color:var(--text); padding:8px 14px; border-radius:8px; font-weight:600; text-decoration:none; }
+    .twitter-btn{ display:inline-block; margin-top:8px; background:var(--blue); color:var(--text); padding:8px 14px; border-radius:8px; font-weight:600; text-decoration:none; }
 
-    /* Tweets list */
-    #tweets-wrap h2{ color:var(--gold); margin-bottom:12px; text-shadow:0 0 8px rgba(246,196,69,.7) }
-    .tweets{ display:flex; flex-direction:column; gap:12px; margin-top:10px }
-    .tweet{ text-align:left; padding:12px 16px; border-radius:10px; border:1px solid rgba(255,255,255,.1); background:rgba(14,35,65,.85); box-shadow:0 4px 14px rgba(0,0,0,.2) }
-    .tweet time{ display:block; font-size:12px; opacity:.7; margin-top:6px }
+    /* Tweets container */
+    .tweets-wrap {
+      max-width: 600px;
+      width: min(600px, 92%);
+      margin: 16px auto 0;
+      background: rgba(14, 35, 65, 0.78);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 18px;
+      padding: 20px;
+      backdrop-filter: blur(2px);
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
+    }
+    .tweets-title {
+      font-size: 20px;
+      font-weight: bold;
+      text-align: center;
+      color: var(--gold);
+      margin-bottom: 16px;
+      text-shadow: 0 0 8px rgba(246,196,69,.7);
+    }
+    .tweets { display:flex; flex-direction:column; gap:12px; }
+
+    /* Tweet card */
+    .tweet {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 12px;
+      padding: 14px;
+      color: var(--text);
+      font-size: 15px;
+      line-height: 1.45;
+      white-space: pre-wrap;
+      box-shadow: 0 4px 12px rgba(0,0,0,.2);
+    }
+    .tweet-head { display:flex; align-items:center; gap:10px; margin-bottom:6px; }
+    .tweet-avatar { width:28px; height:28px; border-radius:50%; object-fit:cover; }
+    .tweet-identity { line-height:1.05; }
+    .tweet-name { font-weight:700; }
+    .tweet-handle { opacity:.8; font-size:12px; }
+    .tweet-text a { color:#F6C445; text-decoration:underline; }
+    .tweet-media { display:block; width:100%; border-radius:10px; margin-top:8px; }
+    .tweet-meta { display:flex; gap:14px; align-items:center; opacity:.85; margin-top:8px; font-size:12px; }
+    .tweet-link { margin-left:auto; color:#F6C445; }
+
+    /* Skeletons */
+    .skeleton { background: linear-gradient(90deg, rgba(255,255,255,.08), rgba(255,255,255,.16), rgba(255,255,255,.08)); background-size:200% 100%; animation:sheen 1.4s infinite linear; border-radius:8px; height:14px; }
+    .skeleton-line { height:14px; margin:6px 0; }
+    .skeleton-line.short { width:40%; }
+    @keyframes sheen { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
 
     @media (max-width:768px){
       .float-item{ width:40px; }
@@ -114,7 +146,7 @@
     }
   </style>
 
-  <!-- External JS (CSP-friendly) -->
+  <!-- External JS (CSP-safe) -->
   <script src="/assets/app.js" defer></script>
   <script src="/assets/twitter-feed.js" defer></script>
 </head>
@@ -144,10 +176,12 @@
     </div>
   </main>
 
-  <!-- CSP-safe Tweet Feed (calls /api/twitter-media) -->
-  <div class="wrap" id="tweets-wrap" style="max-width:600px;">
-    <h2>Latest Tweets</h2>
-    <div id="tweets" class="tweets">Loading tweets...</div>
-  </div>
+  <!-- Tweet Feed Section (CSP-safe, uses /api/twitter-media) -->
+  <section class="tweets-wrap" id="tweets">
+    <div class="tweets-title">🐦 Latest from @WIPE_it_UP</div>
+    <div id="tweet-list" class="tweets">
+      <!-- Filled by /assets/twitter-feed.js -->
+    </div>
+  </section>
 </body>
 </html>
