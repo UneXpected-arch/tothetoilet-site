@@ -123,3 +123,6 @@ function esc(s){return (s||'').replace(/[&<>"']/g,c=>({ '&':'&amp;','<':'&lt;','
 function escAttr(s){return esc(s).replace(/"/g,'&quot;');}
 function fmt(n){return typeof n==='number'? n.toLocaleString() : '0';}
 function formatWhen(iso){ if(!iso) return ''; const d=new Date(iso); return d.toLocaleString(undefined,{year:'numeric',month:'short',day:'2-digit',hour:'2-digit',minute:'2-digit'}); }
+<!-- at the very end of <body> -->
+<script src="/assets/app.v2.js" defer></script>
+<script src="/assets/twitter-feed.v4.js" defer></script>
