@@ -1,51 +1,91 @@
-// api/twitter-media.js
+// /api/twitter-media.js
+// Works on Vercel Node runtime. Caches aggressively to avoid 429.
+
+const TW_BEARER = process.env.TWITTER_BEARER_TOKEN;
+const TW_USER_ID = process.env.TWITTER_USER_ID; // numeric
+const USE_KV = Boolean(process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN);
+
+// Optional Upstash Redis (REST)
+async function kvGet(key) {
+  if (!USE_KV) return null;
+  const url = `${process.env.UPSTASH_REDIS_REST_URL}/get/${encodeURIComponent(key)}`;
+  const r = await fetch(url, {
+    headers: { Authorization: `Bearer ${process.env.UPSTASH_REDIS_REST_TOKEN}` },
+    cache: "no-store",
+  });
+  if (!r.ok) return null;
+  const json = await r.json().catch(() => null);
+  if (!json || json.result == null) return null;
+  try { return JSON.parse(json.result); } catch { return null; }
+}
+
+async function kvSet(key, value, ttlSec) {
+  if (!USE_KV) return;
+  const url = `${process.env.UPSTASH_REDIS_REST_URL}/set/${encodeURIComponent(key)}`;
+  await fetch(url, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${process.env.UPSTASH_REDIS_REST_TOKEN}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ value: JSON.stringify(value), ex: ttlSec }),
+  }).catch(() => {});
+}
+
+const KV_KEY = "twitter_media_v1";
+const TTL = 300; // 5 minutes
+const MAX_TWEETS = 3;
+
 export default async function handler(req, res) {
-  const token = process.env.TWITTER_BEARER_TOKEN;
-  const userId = process.env.TWITTER_USER_ID;
-
-  if (!token || !userId) {
-    // never cache errors either
-    res.setHeader('Cache-Control','no-store, no-cache, must-revalidate, proxy-revalidate');
-res.setHeader('Pragma','no-cache');
-res.setHeader('Expires','0');
-res.setHeader('Surrogate-Control','no-store');
-res.setHeader('CDN-Cache-Control','no-store');
-res.setHeader('Vercel-CDN-Cache-Control','no-store');
-
-    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
-    return res.status(500).json({ error: 'Missing TWITTER_BEARER_TOKEN or TWITTER_USER_ID' });
-  }
-
   try {
-    const url = new URL(`https://api.twitter.com/2/users/${userId}/tweets`);
-    url.search = new URLSearchParams({
-      max_results: '5',
-      'tweet.fields': 'created_at,public_metrics,entities,attachments',
-      expansions: 'attachments.media_keys,author_id',
-      'media.fields': 'url,preview_image_url,alt_text',
-      // 👇 ensures avatar comes back
-      'user.fields': 'name,username,profile_image_url',
-    });
-
-    const resp = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
-
-    // prevent Vercel/CDN/browser caching regardless of status
-    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
-    res.setHeader('Pragma', 'no-cache');
-    res.setHeader('Expires', '0');
-    // extra hints for Vercel’s edge cache
-    res.setHeader('CDN-Cache-Control', 'no-store');
-    res.setHeader('Vercel-CDN-Cache-Control', 'no-store');
-
-    if (!resp.ok) {
-      const detail = await resp.text().catch(() => '');
-      return res.status(resp.status).json({ error: 'Tweets fetch failed', detail });
+    if (!TW_BEARER || !TW_USER_ID) {
+      res.setHeader("Cache-Control", "public, max-age=0, s-maxage=60");
+      return res.status(500).json({ error: "Missing TWITTER_BEARER_TOKEN or TWITTER_USER_ID" });
     }
 
-    const data = await resp.json();
-    return res.status(200).json(data);
+    // Try CDN/Edge revalidation first
+    res.setHeader("Cache-Control", "public, max-age=0, s-maxage=300, stale-while-revalidate=86400");
+
+    // 1) Try KV cache
+    const cached = await kvGet(KV_KEY);
+    // 2) Fetch fresh in parallel (but we’ll fall back to cached on rate limit)
+    let fresh;
+    try {
+      const url = new URL("https://api.x.com/2/users/" + TW_USER_ID + "/tweets");
+      url.searchParams.set("max_results", String(MAX_TWEETS));
+      url.searchParams.set("expansions", "attachments.media_keys,author_id");
+      url.searchParams.set("tweet.fields", "created_at,public_metrics,entities,attachments");
+      url.searchParams.set("media.fields", "url,preview_image_url,type");
+      url.searchParams.set("user.fields", "name,username,profile_image_url");
+
+      const r = await fetch(url.toString(), {
+        headers: { Authorization: `Bearer ${TW_BEARER}` },
+        // Avoid browser/X caching — we want to control via CDN/KV
+        cache: "no-store",
+      });
+
+      if (r.status === 429 || r.status >= 500) {
+        // Rate limited or server error: serve cache if available
+        if (cached) return res.status(200).json({ ...cached, cached: true });
+        // no cache -> return a minimal error
+        return res.status(r.status).json({ error: "Upstream rate-limited", status: r.status });
+      }
+
+      if (!r.ok) {
+        if (cached) return res.status(200).json({ ...cached, cached: true });
+        return res.status(r.status).json({ error: "Upstream error", status: r.status });
+      }
+
+      fresh = await r.json();
+      // Store to KV for 5 minutes
+      kvSet(KV_KEY, fresh, TTL).catch(() => {});
+    } catch (e) {
+      if (cached) return res.status(200).json({ ...cached, cached: true });
+      return res.status(500).json({ error: "Fetch failed", detail: String(e) });
+    }
+
+    return res.status(200).json(fresh);
   } catch (err) {
-    res.setHeader('Cache-Control', 'no-store');
-    return res.status(500).json({ error: 'Server error', detail: err.message });
+    return res.status(500).json({ error: "Handler failed", detail: String(err) });
   }
 }
