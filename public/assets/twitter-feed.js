@@ -1,28 +1,17 @@
-// public/assets/twitter-feed.js
-async function loadTweets() {
-  try {
-    const res = await fetch('/api/twitter-media');
-    const data = await res.json();
-    const tweetsContainer = document.getElementById('tweets');
-
-    if (!data.data) {
-      tweetsContainer.innerHTML = '<p>Unable to load tweets.</p>';
+fetch('/api/twitter-media?user=WIPE_it_UP', { cache: 'no-store' })
+  .then(r => r.json())
+  .then(data => {
+    const el = document.getElementById('tweets');
+    if (!data?.data) {
+      el.textContent = data?.error ? `Tweets unavailable: ${data.error}` : 'No tweets.';
       return;
     }
+    el.innerHTML = data.data.map(t => `
+      <div class="tweet">
+        <p>${t.text.replace(/</g,'&lt;')}</p>
+        <time>${new Date(t.created_at).toLocaleString()}</time>
+      </div>
+    `).join('');
+  })
+  .catch(() => (document.getElementById('tweets').textContent = 'Could not load tweets.'));
 
-    tweetsContainer.innerHTML = data.data.map(tweet => {
-      const date = new Date(tweet.created_at);
-      return `
-        <div class="tweet">
-          <p>${tweet.text}</p>
-          <time>${date.toLocaleString()}</time>
-        </div>
-      `;
-    }).join('');
-  } catch (err) {
-    console.error('Error loading tweets', err);
-    document.getElementById('tweets').innerHTML = '<p>Failed to load tweets.</p>';
-  }
-}
-
-document.addEventListener('DOMContentLoaded', loadTweets);
