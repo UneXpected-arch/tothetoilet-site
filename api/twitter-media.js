@@ -12,6 +12,7 @@ export default async function handler(req, res) {
   }
 
   try {
+    // 1) Try Redis cache first
     const cached = await redis.get(CACHE_KEY);
     if (cached) {
       res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=60');
@@ -19,6 +20,7 @@ export default async function handler(req, res) {
       return res.status(200).json(cached);
     }
 
+    // 2) Fetch from X API using user ID (no username lookup)
     const params = new URLSearchParams({
       max_results: '5',
       'tweet.fields': 'created_at,public_metrics,entities,attachments',
@@ -26,14 +28,24 @@ export default async function handler(req, res) {
       'media.fields': 'url,preview_image_url,alt_text'
     });
 
-    const url = `https://api.twitter.com/2/users/${userId}/tweets?${params}`;
+    const url = `https://api.twitter.com/2/users/${userId}/tweets?${params.toString()}`;
     const r = await fetch(url, { headers: { Authorization: `Bearer ${bearer}` } });
 
     if (!r.ok) {
-      return res.status(r.status).json({ error: 'Tweets fetch failed', detail: await r.text() });
+      const detail = await r.text().catch(() => '');
+      // Fallback to any stale cache
+      const stale = await redis.get(CACHE_KEY);
+      if (stale) {
+        res.setHeader('Cache-Control', 's-maxage=60');
+        res.setHeader('X-Cache', 'REDIS-STALE');
+        return res.status(200).json(stale);
+      }
+      return res.status(r.status).json({ error: 'Tweets fetch failed', detail });
     }
 
     const json = await r.json();
+
+    // 3) Save to Redis with TTL
     await redis.set(CACHE_KEY, json, { ex: TTL_SECONDS });
 
     res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=60');
