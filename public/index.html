@@ -17,41 +17,34 @@
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:site" content="@WIPE_it_UP" />
   <meta name="twitter:title" content="🚽 To The Toilet — WIPE Game" />
-  <meta name="twitter:description" content="💦 Flush your debt, catch the gains! Can YOU scoop the profits before they get flushed forever?" />
+  <meta name="twitter:description" content="💦 Flush your debt, catch the gains! Can YOU scoop the gains before they get flushed forever?" />
   <meta name="twitter:image" content="https://www.tothetoilet.xyz/assets/social-card.png" />
 
-  <!-- CSP tuned for widgets.js (keeps everything else self-only) -->
+  <!-- Tight CSP (no widgets, no eval) -->
   <meta http-equiv="Content-Security-Policy" content="
     default-src 'self';
-    script-src 'self' https://platform.twitter.com 'unsafe-inline' 'unsafe-eval';
+    script-src 'self';
     style-src 'self' 'unsafe-inline';
     img-src 'self' data: https://pbs.twimg.com https://abs.twimg.com https://ton.twimg.com;
-    connect-src 'self' https://syndication.twitter.com https://cdn.syndication.twimg.com https://pbs.twimg.com https://ton.twimg.com;
-    frame-src https://platform.twitter.com https://syndication.twitter.com https://twitter.com;
-    font-src 'self' https://abs.twimg.com;
+    connect-src 'self';
+    frame-src 'none';
+    font-src 'self';
     media-src 'self';
     base-uri 'self';
     form-action 'self';
   ">
-
-  <!-- Help the widget start faster when allowed -->
-  <link rel="preconnect" href="https://platform.twitter.com" crossorigin>
-  <link rel="preconnect" href="https://syndication.twitter.com" crossorigin>
-  <link rel="preconnect" href="https://pbs.twimg.com" crossorigin>
 
   <style>
     :root{ --navy:#0E2341; --gold:#F6C445; --blue:#1E4E89; --text:#F7F7F7; }
     *{ box-sizing:border-box; margin:0; padding:0; }
     html,body{ height:100%; overflow-x:hidden; }
 
-    /* Background video */
     .video-bg{
       position:fixed; top:50%; left:50%;
       min-width:100%; min-height:100%;
       transform:translate(-50%,-50%) scale(1.05);
       object-fit:cover; z-index:-2; will-change:transform;
     }
-    /* Readability overlay */
     .overlay{ position:fixed; inset:0; background:rgba(14,35,65,.65); z-index:-1; pointer-events:none; }
 
     body{
@@ -60,27 +53,15 @@
       display:flex; flex-direction:column; align-items:center; justify-content:flex-start;
       padding:40px 0 60px;
     }
-
     .wrap{
       width:min(960px,92%);
       text-align:center;
       background:rgba(14,35,65,.78);
       border:1px solid rgba(255,255,255,.12);
-      border-radius:18px;
-      padding:32px 22px;
-      backdrop-filter:blur(2px);
-      box-shadow:0 10px 40px rgba(0,0,0,.35);
-      margin-bottom:40px;
+      border-radius:18px; padding:32px 22px; backdrop-filter:blur(2px);
+      box-shadow:0 10px 40px rgba(0,0,0,.35); margin-bottom:40px;
     }
-
-    h1{
-      margin:0 0 8px;
-      font-size:clamp(28px,6vw,56px);
-      color:var(--gold);
-      text-shadow:0 0 14px rgba(246,196,69,.9);
-      letter-spacing:.5px;
-    }
-
+    h1{ margin:0 0 8px; font-size:clamp(28px,6vw,56px); color:var(--gold); text-shadow:0 0 14px rgba(246,196,69,.9); letter-spacing:.5px; }
     p{ margin:8px auto 18px; max-width:720px; font-size:clamp(16px,2.8vw,20px) }
     .emoji{ display:inline-block; animation:pulse 1.4s infinite ease-in-out }
     @keyframes pulse{ 0%,100%{ transform:scale(1) } 50%{ transform:scale(1.2) } }
@@ -91,7 +72,6 @@
       font-size:clamp(18px,3.5vw,22px);
       box-shadow:0 6px 0 #caa02b, 0 0 20px rgba(246,196,69,.85);
       transition:transform .15s ease, box-shadow .15s ease;
-      perspective:500px;
     }
     .cta:hover{ box-shadow:0 8px 24px rgba(246,196,69,1), 0 6px 0 #caa02b }
     .cta:active{ transform:translateY(2px); box-shadow:0 4px 0 #caa02b }
@@ -101,6 +81,28 @@
       display:inline-block; margin-top:8px; background:var(--blue);
       color:var(--text); padding:8px 14px; border-radius:8px; font-weight:600; text-decoration:none;
     }
+
+    /* “Latest on X” card */
+    .x-card{
+      background:rgba(14,35,65,.78);
+      border:1px solid rgba(255,255,255,.12);
+      border-radius:14px;
+      text-align:left;
+      padding:14px 16px;
+    }
+    .x-card h3{
+      margin:0 0 10px;
+      color:#F6C445;
+      text-shadow:0 0 8px rgba(246,196,69,.6);
+      text-align:center;
+    }
+    .x-img{ width:100%; display:block; border-radius:10px; }
+    .x-actions{ display:flex; gap:10px; flex-wrap:wrap; margin-top:10px }
+    .x-actions a{
+      background:#1E4E89; color:#fff; text-decoration:none;
+      padding:8px 12px; border-radius:8px; font-weight:700;
+    }
+    .muted{ opacity:.8; font-size:12px; margin-top:8px }
   </style>
 </head>
 <body>
@@ -122,113 +124,46 @@
     <div class="sub">
       Powered by the WIPE community • #WIPEcoin
       <br/>
-      <a class="twitter-btn" href="https://twitter.com/WIPE_it_UP" target="_blank" rel="noopener">🐦 Follow us on Twitter</a>
+      <a class="twitter-btn" href="https://twitter.com/WIPE_it_UP" target="_blank" rel="noopener">🐦 Follow us on X</a>
     </div>
   </main>
 
-  <!-- X / Twitter feed (lazy, single-shot, with fallback) -->
-  <div class="wrap" style="max-width:600px;">
-    <h3 style="margin:0 0 10px; color:#F6C445; text-shadow:0 0 8px rgba(246,196,69,.6);">
-      Latest Tweets
-    </h3>
-
-    <div id="x-feed"
-         style="min-height: 320px; display:flex; align-items:center; justify-content:center;">
-      <div id="x-fallback" style="display:none; text-align:center; line-height:1.45;">
-        <p style="margin:0 0 8px; opacity:.9;">Can’t load the timeline right now.</p>
-        <p style="margin:0 0 14px; opacity:.9;">View the latest posts on X ⤵</p>
-        <a href="https://twitter.com/WIPE_it_UP" target="_blank" rel="noopener"
-           style="display:inline-block; padding:10px 14px; border-radius:10px;
-                  background:#1E4E89; color:#fff; text-decoration:none; font-weight:700;">
-          Open @WIPE_it_UP on X
-        </a>
+  <!-- Rock-solid “Latest on X” (no widgets, no API) -->
+  <div class="wrap" style="max-width:640px;">
+    <div class="x-card"
+         data-tweet-url="https://twitter.com/WIPE_it_UP/status/1955183220762235078"
+         data-img="https://pbs.twimg.com/media/GyI0s1fW0AAv0T6.jpg">
+      <h3>Latest on X</h3>
+      <img class="x-img" alt="Latest post image" src="" />
+      <div class="x-actions">
+        <a class="x-open" href="#" target="_blank" rel="noopener">Open post</a>
+        <a href="https://twitter.com/WIPE_it_UP" target="_blank" rel="noopener">Visit @WIPE_it_UP</a>
       </div>
-      <div id="x-loading" style="opacity:.85;">Loading…</div>
+      <div class="muted">Media shown without tracking scripts. Click through for the full post.</div>
     </div>
   </div>
 
   <script>
-  // Subtle parallax for the background video
-  (function(){
-    const video = document.getElementById('bg-video');
-    let tx=0, ty=0, cx=0, cy=0;
-    const max = 15, ease = 0.05;
-
-    function set(x,y){
-      const nx = (x/innerWidth)*2 - 1;
-      const ny = (y/innerHeight)*2 - 1;
-      tx = nx * max; ty = ny * max;
-    }
-    addEventListener('mousemove', e => set(e.clientX, e.clientY), {passive:true});
-    addEventListener('touchmove', e => { if(e.touches[0]) set(e.touches[0].clientX, e.touches[0].clientY); }, {passive:true});
-
-    (function loop(){
-      cx += (tx - cx) * ease; cy += (ty - cy) * ease;
-      video.style.transform = `translate(-50%, -50%) scale(1.05) translate(${cx.toFixed(2)}px, ${cy.toFixed(2)}px)`;
-      requestAnimationFrame(loop);
+    // Parallax
+    (function(){
+      const v=document.getElementById('bg-video');let tx=0,ty=0,cx=0,cy=0;const max=15,e=.05;
+      function set(x,y){const nx=(x/innerWidth)*2-1,ny=(y/innerHeight)*2-1;tx=nx*max;ty=ny*max;}
+      addEventListener('mousemove',e=>set(e.clientX,e.clientY),{passive:true});
+      addEventListener('touchmove',e=>{if(e.touches[0])set(e.touches[0].clientX,e.touches[0].clientY)},{passive:true});
+      (function loop(){cx+=(tx-cx)*e;cy+=(ty-cy)*e;v.style.transform=`translate(-50%,-50%) scale(1.05) translate(${cx.toFixed(2)}px,${cy.toFixed(2)}px)`;requestAnimationFrame(loop);})();
     })();
-  })();
 
-  // Lazy-load X timeline with single render + graceful fallback
-  (function(){
-    if (window.__X_WIDGET_ATTACHED__) return;
-    window.__X_WIDGET_ATTACHED__ = true;
-
-    const container = document.getElementById('x-feed');
-    const fallback  = document.getElementById('x-fallback');
-    const loading   = document.getElementById('x-loading');
-
-    let scriptInjected = false;
-    let rendered = false;
-    let gaveUp = false;
-
-    function showFallback(){
-      if (rendered || gaveUp) return;
-      gaveUp = true;
-      loading.style.display = 'none';
-      fallback.style.display = 'block';
-    }
-
-    function renderTimeline(){
-      if (rendered || !window.twttr || !twttr.widgets) return;
-      twttr.widgets.createTimeline(
-        { sourceType: 'profile', screenName: 'WIPE_it_UP' },
-        container,
-        { theme: 'dark', height: 600, chrome: 'noheader nofooter noborders transparent', dnt: false }
-      ).then(function(el){
-        if (el) {
-          rendered = true;
-          loading.style.display = 'none';
-          fallback.style.display = 'none';
-        } else {
-          showFallback();
-        }
-      }).catch(showFallback);
-    }
-
-    function injectScript(){
-      if (scriptInjected) return;
-      scriptInjected = true;
-      const s = document.createElement('script');
-      s.src = 'https://platform.twitter.com/widgets.js';
-      s.async = true;
-      s.charset = 'utf-8';
-      s.onload = renderTimeline;
-      // If widgets.js loads but refuse to render (429 etc.), fallback
-      setTimeout(function(){ if (!rendered) showFallback(); }, 4000);
-      document.head.appendChild(s);
-    }
-
-    const io = new IntersectionObserver((entries) => {
-      if (entries.some(e => e.isIntersecting)){
-        injectScript();
-        io.disconnect();
-      }
-    }, { rootMargin: '120px 0px 120px 0px', threshold: 0.01 });
-
-    io.observe(container);
-    setTimeout(function(){ if (!rendered) showFallback(); }, 10000);
-  })();
+    // Initialize static X card (no external scripts, no API)
+    (function(){
+      const card = document.querySelector('.x-card');
+      if (!card) return;
+      const img = card.querySelector('.x-img');
+      const open = card.querySelector('.x-open');
+      const url = card.getAttribute('data-tweet-url');
+      const media = card.getAttribute('data-img');
+      if (media) img.src = media;
+      if (url)   open.href = url;
+    })();
   </script>
 </body>
 </html>
