@@ -20,7 +20,7 @@
   <meta name="twitter:description" content="💦 Flush your debt, catch the gains! Can YOU scoop the profits before they get flushed forever?" />
   <meta name="twitter:image" content="https://www.tothetoilet.xyz/assets/social-card.png" />
 
-  <!-- CSP that ALLOWS Twitter’s widget/iframe/images -->
+  <!-- CSP for Twitter Embed -->
   <meta http-equiv="Content-Security-Policy" content="
     default-src 'self';
     script-src 'self' https://platform.twitter.com 'unsafe-inline' 'unsafe-eval';
@@ -39,15 +39,24 @@
     *{ box-sizing:border-box; margin:0; padding:0; }
     html,body{ height:100%; overflow-x:hidden; }
 
-    /* Background video */
-    .video-bg{
-      position:fixed; top:50%; left:50%;
-      min-width:100%; min-height:100%;
-      transform:translate(-50%,-50%) scale(1.05);
-      object-fit:cover; z-index:-2; will-change:transform;
+    .video-bg {
+      position: fixed;
+      top: 50%; left: 50%;
+      min-width: 100%;
+      min-height: 100%;
+      transform: translate(-50%, -50%) scale(1.05);
+      object-fit: cover;
+      z-index: -2;
+      will-change: transform;
     }
-    /* Dark overlay for readability */
-    .overlay{ position:fixed; inset:0; background:rgba(14,35,65,.65); z-index:-1; pointer-events:none; }
+
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(14,35,65,0.65);
+      z-index: -1;
+      pointer-events:none;
+    }
 
     body{
       color:var(--text);
@@ -86,7 +95,6 @@
       font-size:clamp(18px,3.5vw,22px);
       box-shadow:0 6px 0 #caa02b, 0 0 20px rgba(246,196,69,.85);
       transition:transform .15s ease, box-shadow .15s ease;
-      perspective:500px;
     }
     .cta:hover{ box-shadow:0 8px 24px rgba(246,196,69,1), 0 6px 0 #caa02b }
     .cta:active{ transform:translateY(2px); box-shadow:0 4px 0 #caa02b }
@@ -99,7 +107,6 @@
   </style>
 </head>
 <body>
-  <!-- Background video -->
   <video id="bg-video" class="video-bg" autoplay muted loop playsinline>
     <source src="/assets/bg.webm" type="video/webm">
     <source src="/assets/bg.mp4" type="video/mp4">
@@ -117,36 +124,47 @@
     <div class="sub">
       Powered by the WIPE community • #WIPEcoin
       <br/>
-      <a class="twitter-btn" href="https://twitter.com/WIPE_it_UP" target="_blank" rel="noopener">🐦 Follow us on Twitter</a>
+      <a class="twitter-btn" href="https://twitter.com/WIPE_it_UP" target="_blank">🐦 Follow us on Twitter</a>
     </div>
   </main>
 
-  <!-- Official Twitter timeline -->
+  <!-- Twitter Feed Embed -->
   <div class="wrap" style="max-width:600px;">
     <a class="twitter-timeline"
        data-width="500"
        data-height="600"
        data-theme="dark"
-       data-chrome="noheader nofooter noborders transparent"
-       href="https://twitter.com/WIPE_it_UP">
-      Tweets by @WIPE_it_UP
+       href="https://twitter.com/WIPE_it_UP?ref_src=twsrc%5Etfw">
+      Tweets by WIPE_it_UP
     </a>
     <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
   </div>
 
   <script>
-    // Subtle parallax on background video
-    (function(){
-      const video = document.getElementById('bg-video');
-      let tx=0,ty=0,cx=0,cy=0; const max=15,ease=.05;
-      function set(x,y){ const nx=(x/innerWidth)*2-1, ny=(y/innerHeight)*2-1; tx=nx*max; ty=ny*max; }
-      addEventListener('mousemove', e=>set(e.clientX,e.clientY), {passive:true});
-      addEventListener('touchmove', e=>{ if(e.touches[0]) set(e.touches[0].clientX,e.touches[0].clientY); }, {passive:true});
-      (function loop(){ cx+=(tx-cx)*ease; cy+=(ty-cy)*ease;
-        video.style.transform=`translate(-50%,-50%) scale(1.05) translate(${cx.toFixed(2)}px,${cy.toFixed(2)}px)`;
-        requestAnimationFrame(loop);
-      })();
+  (function(){
+    const video = document.getElementById('bg-video');
+    let tx = 0, ty = 0, cx = 0, cy = 0;
+    const max = 15, ease = 0.05;
+
+    function set(x,y){
+      const nx = (x / innerWidth) * 2 - 1;
+      const ny = (y / innerHeight) * 2 - 1;
+      tx = nx * max;
+      ty = ny * max;
+    }
+
+    addEventListener('mousemove', e => set(e.clientX, e.clientY), {passive:true});
+    addEventListener('touchmove', e => {
+      if(e.touches[0]) set(e.touches[0].clientX, e.touches[0].clientY);
+    }, {passive:true});
+
+    (function loop(){
+      cx += (tx - cx) * ease;
+      cy += (ty - cy) * ease;
+      video.style.transform = `translate(-50%, -50%) scale(1.05) translate(${cx.toFixed(2)}px, ${cy.toFixed(2)}px)`;
+      requestAnimationFrame(loop);
     })();
+  })();
   </script>
 </body>
 </html>
