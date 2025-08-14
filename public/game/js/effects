@@ -1,0 +1,15 @@
+function triggerMemeEffect(text){
+  const el = document.createElement("div");
+  el.textContent = text;
+  el.style.position = "fixed";
+  el.style.left = "50%";
+  el.style.top = "50%";
+  el.style.transform = "translate(-50%, -50%)";
+  el.style.fontSize = "3rem";
+  el.style.fontWeight = "900";
+  el.style.color = "#FFD700";
+  el.style.textShadow = "2px 2px 10px #000";
+  el.style.zIndex = 9999;
+  document.body.appendChild(el);
+  setTimeout(()=> el.remove(), 1500);
+}

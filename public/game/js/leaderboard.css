@@ -1,0 +1,30 @@
+/* Username / Modal */
+.wl-usr{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+.wl-btn{
+  background:transparent; color:#f7f7f7; border:1px solid rgba(255,255,255,.25);
+  border-radius:10px; padding:6px 10px; cursor:pointer; font-weight:700;
+}
+.wl-ghost{ opacity:.9; }
+.wl-me b{ color:#F6C445; }
+
+#wl-modal{ position:fixed; inset:0; display:none; place-items:center; z-index:9999; }
+#wl-modal.open{ display:grid; }
+.wl-modal-backdrop{ position:absolute; inset:0; background:rgba(0,0,0,.55); backdrop-filter: blur(2px); }
+.wl-modal-card{
+  position:relative; width:min(520px,92%);
+  background:rgba(14,35,65,.98);
+  border:1px solid rgba(255,255,255,.15);
+  border-radius:16px; padding:20px;
+  box-shadow:0 20px 60px rgba(0,0,0,.5);
+}
+.wl-modal-card h3{ margin:0 0 6px; color:#F6C445; text-shadow:0 0 10px rgba(246,196,69,.5); }
+.wl-modal-sub{ margin:0 0 12px; opacity:.85; }
+.wl-modal-form{ display:grid; gap:10px; }
+.wl-input{
+  width:100%; padding:12px 14px; border-radius:12px;
+  background:#0E2341; color:#f7f7f7; border:1px solid rgba(255,255,255,.18);
+  font-weight:700;
+}
+.wl-modal-actions{ display:flex; gap:10px; justify-content:flex-end; }
+.wl-primary{ background:#1E4E89; color:#061b2c; border-color:transparent; }
+.wl-primary:hover{ filter:brightness(1.1); }
