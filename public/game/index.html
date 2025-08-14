@@ -1,55 +1,109 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>WIPE: Catch the Gains</title>
-  <link rel="stylesheet" href="style.css">
-  <style>
-    body {
-      margin: 0;
-      padding: 0;
-      background: url('../assets/backdrop.png') center/cover no-repeat fixed;
-      background-color: #0E2341; /* fallback */
-    }
-    canvas {
-      background: transparent !important;
-      display: block;
-      margin: 0 auto;
-    }
-    .hud {
-      position: absolute;
-      top: 5px;
-      left: 5px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      padding: 4px 8px;
-      background: rgba(0,0,0,0.5);
-      border-radius: 8px;
-      color: #fff;
-      font-family: Arial, sans-serif;
-      font-size: 14px;
-    }
-    .hud img {
-      height: 20px;
-    }
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>WIPE: Catch The Gains</title>
+<meta name="description" content="WIPE mini-game — catch coins with a toilet paper roll and post your score.">
+<link rel="icon" href="../assets/favicon.png" type="image/png">
+<meta property="og:title" content="WIPE: Catch The Gains">
+<meta property="og:description" content="I scored big in WIPE — can you beat me?">
+<meta property="og:image" content="../assets/backdrop.png">
+<style>
+  :root {
+    --bg:#0E2341; --tile:#122b52; --accent:#1E4E89;
+    --gold:#F6C445; --gold-dark:#b98513; --text:#F7F7F7;
+  }
+
+  /* Full-page viral backdrop (menu + gameplay) */
+  html,body{
+    margin:0;
+    height:100%;
+    background: #0E2341 url("../assets/backdrop.png") center/cover no-repeat fixed;
+    font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial;
+    color:var(--text);
+  }
+
+  #ui{position:fixed;inset:0;pointer-events:none}
+  .hud{position:absolute;left:12px;top:10px;font-weight:800;text-shadow:0 2px 6px rgba(0,0,0,.35);display:flex;gap:12px;align-items:center}
+  .brand{display:inline-flex;align-items:center;gap:8px;padding:4px 10px;border-radius:999px;background:rgba(30,78,137,.28);border:1px solid rgba(255,255,255,.12)}
+  .brand img{width:18px;height:18px;border-radius:50%}
+  .right{position:absolute;right:12px;top:10px;font-weight:700;opacity:.85}
+  .center{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center}
+  .panel{pointer-events:auto;background:rgba(14,35,65,.92);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:20px;max-width:560px}
+  .panel h1{margin:0 0 8px}
+  .panel p{margin:8px 0}
+  .actions{display:flex;gap:10px;justify-content:center;margin-top:10px;flex-wrap:wrap}
+  button{pointer-events:auto;cursor:pointer;border:0;border-radius:12px;padding:12px 18px;font-weight:800}
+  .primary{background:var(--accent);color:#061b2c}
+  .ghost{background:transparent;color:var(--text);border:1px solid rgba(255,255,255,.25)}
+  .muted{opacity:.8}
+
+  /* Transparent canvas so backdrop shows in gameplay */
+  canvas{
+    display:block;
+    width:100%;
+    height:100vh;
+    image-rendering:pixelated;
+    background: transparent;
+  }
+
+  .credits{position:absolute;right:12px;bottom:10px;font-size:12px;opacity:.7}
+  .backdrop{
+    background-image:url('../assets/backdrop.png');
+    background-size:cover;
+    background-position:center;
+    border-radius:16px;
+    min-height:180px;
+    margin-bottom:12px
+  }
+</style>
 </head>
 <body>
-  <!-- HUD -->
+<canvas id="game"></canvas>
+<div id="ui">
   <div class="hud">
-    <img src="../assets/coin.png" alt="WIPE">
-    <b>WIPE</b>
-    &nbsp; Score: <span id="score">0</span>
-    &nbsp; Combo: <span id="combo">x1</span>
-    &nbsp; Lives: <span id="lives">3</span>
+    <span class="brand">
+      <img src="../assets/logo.png" alt="WIPE">
+      <b>WIPE</b>
+    </span>
+    <span id="score">Score: 0</span>
+    <span id="combo">Combo: x1</span>
+    <span id="lives">Lives: 3</span>
+  </div>
+  <div class="right">Drag / Touch or ← →</div>
+
+  <div id="start" class="center">
+    <div class="panel">
+      <div class="backdrop"></div>
+      <h1>WIPE: Catch the Gains 🧻💰</h1>
+      <p>Move the TP roll to <b>catch coins</b>. Miss 3 and it’s <i>game over</i>.</p>
+      <div class="actions">
+        <button id="startBtn" class="primary">Start</button>
+        <button id="muteBtn" class="ghost">Sound: Off</button>
+      </div>
+    </div>
   </div>
 
-  <!-- Game Canvas -->
-  <canvas id="gameCanvas" width="800" height="600"></canvas>
+  <div id="gameover" class="center" style="display:none;">
+    <div class="panel">
+      <div class="backdrop" style="filter:blur(1px) brightness(.85)"></div>
+      <h2>Flushed… 💀</h2>
+      <p id="final"></p>
+      <div class="actions">
+        <button id="again" class="primary">Play Again</button>
+        <button id="share" class="ghost">Share to X</button>
+      </div>
+    </div>
+  </div>
 
-  <!-- Scripts -->
-  <script src="js/game.js"></script>
+  <div class="credits">WIPE mini-game</div>
+</div>
+
+<script src="game.js"></script>
+<link rel="stylesheet" href="/game/leaderboard.css">
+<div id="wipe-leader"></div>
+<script src="/game/js/leaderboard.js"></script>
+<script src="/game/js/effects.js"></script>
 </body>
 </html>
