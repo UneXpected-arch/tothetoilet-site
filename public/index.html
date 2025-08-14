@@ -20,83 +20,48 @@
   <meta name="twitter:description" content="💦 Flush your debt, catch the gains! Can YOU scoop the profits before they get flushed forever?" />
   <meta name="twitter:image" content="https://www.tothetoilet.xyz/assets/social-card.png" />
 
+  <!-- CSP that ALLOWS Twitter’s widget, iframe, images -->
+  <meta http-equiv="Content-Security-Policy" content="
+    default-src 'self';
+    script-src 'self' https://platform.twitter.com 'unsafe-inline' 'unsafe-eval';
+    style-src 'self' 'unsafe-inline';
+    img-src 'self' data: https://pbs.twimg.com https://abs.twimg.com;
+    connect-src 'self' https://api.twitter.com https://syndication.twitter.com https://pbs.twimg.com https://ton.twitter.com;
+    frame-src https://platform.twitter.com https://syndication.twitter.com;
+    font-src 'self';
+    media-src 'self';
+    base-uri 'self';
+    form-action 'self';
+  ">
+
   <style>
     :root{ --navy:#0E2341; --gold:#F6C445; --blue:#1E4E89; --text:#F7F7F7; }
     *{ box-sizing:border-box; margin:0; padding:0; }
     html,body{ height:100%; overflow-x:hidden; }
-
-    /* Background video styles */
-    .video-bg {
-      position: fixed;
-      top: 50%; left: 50%;
-      min-width: 100%;
-      min-height: 100%;
-      transform: translate(-50%, -50%) scale(1.05);
-      object-fit: cover;
-      z-index: -2;
-      will-change: transform;
-    }
-
-    /* Dark overlay for readability */
-    .overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(14,35,65,0.65);
-      z-index: -1;
-      pointer-events:none;
-    }
-
-    body{
-      color:var(--text);
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial;
-      display:flex; flex-direction:column; align-items:center; justify-content:flex-start;
-      padding:40px 0 60px;
-    }
-
-    .wrap{
-      width:min(960px,92%);
-      text-align:center;
-      background:rgba(14,35,65,.78);
-      border:1px solid rgba(255,255,255,.12);
-      border-radius:18px;
-      padding:32px 22px;
-      backdrop-filter:blur(2px);
-      box-shadow:0 10px 40px rgba(0,0,0,.35);
-      margin-bottom:40px;
-    }
-
-    h1{
-      margin:0 0 8px;
-      font-size:clamp(28px,6vw,56px);
-      color:var(--gold);
-      text-shadow:0 0 14px rgba(246,196,69,.9);
-      letter-spacing:.5px;
-    }
-
+    .video-bg{ position:fixed; top:50%; left:50%; min-width:100%; min-height:100%;
+      transform:translate(-50%,-50%) scale(1.05); object-fit:cover; z-index:-2; will-change:transform; }
+    .overlay{ position:fixed; inset:0; background:rgba(14,35,65,.65); z-index:-1; pointer-events:none; }
+    body{ color:var(--text); font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial;
+      display:flex; flex-direction:column; align-items:center; justify-content:flex-start; padding:40px 0 60px; }
+    .wrap{ width:min(960px,92%); text-align:center; background:rgba(14,35,65,.78);
+      border:1px solid rgba(255,255,255,.12); border-radius:18px; padding:32px 22px;
+      backdrop-filter:blur(2px); box-shadow:0 10px 40px rgba(0,0,0,.35); margin-bottom:40px; }
+    h1{ margin:0 0 8px; font-size:clamp(28px,6vw,56px); color:var(--gold);
+      text-shadow:0 0 14px rgba(246,196,69,.9); letter-spacing:.5px; }
     p{ margin:8px auto 18px; max-width:720px; font-size:clamp(16px,2.8vw,20px) }
     .emoji{ display:inline-block; animation:pulse 1.4s infinite ease-in-out }
     @keyframes pulse{ 0%,100%{ transform:scale(1) } 50%{ transform:scale(1.2) } }
-
-    .cta{
-      display:inline-block; padding:14px 24px; border-radius:12px;
-      background:var(--gold); color:#06233f; font-weight:900; text-decoration:none;
-      font-size:clamp(18px,3.5vw,22px);
-      box-shadow:0 6px 0 #caa02b, 0 0 20px rgba(246,196,69,.85);
-      transition:transform .15s ease, box-shadow .15s ease;
-      perspective:500px;
-    }
+    .cta{ display:inline-block; padding:14px 24px; border-radius:12px; background:var(--gold); color:#06233f;
+      font-weight:900; text-decoration:none; font-size:clamp(18px,3.5vw,22px);
+      box-shadow:0 6px 0 #caa02b, 0 0 20px rgba(246,196,69,.85); transition:transform .15s ease, box-shadow .15s ease; }
     .cta:hover{ box-shadow:0 8px 24px rgba(246,196,69,1), 0 6px 0 #caa02b }
     .cta:active{ transform:translateY(2px); box-shadow:0 4px 0 #caa02b }
-
     .sub{ opacity:.85; font-size:14px; margin-top:10px }
-    .twitter-btn{
-      display:inline-block; margin-top:8px; background:var(--blue);
-      color:var(--text); padding:8px 14px; border-radius:8px; font-weight:600; text-decoration:none;
-    }
+    .twitter-btn{ display:inline-block; margin-top:8px; background:var(--blue); color:var(--text);
+      padding:8px 14px; border-radius:8px; font-weight:600; text-decoration:none; }
   </style>
 </head>
 <body>
-  <!-- Background video -->
   <video id="bg-video" class="video-bg" autoplay muted loop playsinline>
     <source src="/assets/bg.webm" type="video/webm">
     <source src="/assets/bg.mp4" type="video/mp4">
@@ -118,44 +83,29 @@
     </div>
   </main>
 
-  <!-- Twitter Feed Embed -->
+  <!-- Official Twitter embed -->
   <div class="wrap" style="max-width:600px;">
     <a class="twitter-timeline"
        data-width="500"
        data-height="600"
        data-theme="dark"
-       href="https://twitter.com/WIPE_it_UP?ref_src=twsrc%5Etfw">
-      Tweets by WIPE_it_UP
+       href="https://twitter.com/WIPE_it_UP">
+      Tweets by @WIPE_it_UP
     </a>
     <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
   </div>
 
   <script>
-  // Subtle parallax effect for video background
-  (function(){
-    const video = document.getElementById('bg-video');
-    let tx = 0, ty = 0, cx = 0, cy = 0;
-    const max = 15, ease = 0.05;
-
-    function set(x,y){
-      const nx = (x / innerWidth) * 2 - 1;
-      const ny = (y / innerHeight) * 2 - 1;
-      tx = nx * max;
-      ty = ny * max;
-    }
-
-    addEventListener('mousemove', e => set(e.clientX, e.clientY), {passive:true});
-    addEventListener('touchmove', e => {
-      if(e.touches[0]) set(e.touches[0].clientX, e.touches[0].clientY);
-    }, {passive:true});
-
-    (function loop(){
-      cx += (tx - cx) * ease;
-      cy += (ty - cy) * ease;
-      video.style.transform = `translate(-50%, -50%) scale(1.05) translate(${cx.toFixed(2)}px, ${cy.toFixed(2)}px)`;
-      requestAnimationFrame(loop);
+    (function(){
+      const video = document.getElementById('bg-video');
+      let tx=0,ty=0,cx=0,cy=0; const max=15,ease=.05;
+      function set(x,y){ const nx=(x/innerWidth)*2-1, ny=(y/innerHeight)*2-1; tx=nx*max; ty=ny*max; }
+      addEventListener('mousemove', e=>set(e.clientX,e.clientY), {passive:true});
+      addEventListener('touchmove', e=>{ if(e.touches[0]) set(e.touches[0].clientX,e.touches[0].clientY); }, {passive:true});
+      (function loop(){ cx+=(tx-cx)*ease; cy+=(ty-cy)*ease;
+        video.style.transform=`translate(-50%,-50%) scale(1.05) translate(${cx.toFixed(2)}px,${cy.toFixed(2)}px)`; requestAnimationFrame(loop);
+      })();
     })();
-  })();
   </script>
 </body>
 </html>
