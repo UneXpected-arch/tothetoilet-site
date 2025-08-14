@@ -20,43 +20,39 @@
   <meta name="twitter:description" content="💦 Flush your debt, catch the gains! Can YOU scoop the profits before they get flushed forever?" />
   <meta name="twitter:image" content="https://www.tothetoilet.xyz/assets/social-card.png" />
 
-  <!-- CSP for Twitter Embed -->
+  <!-- CSP tuned for widgets.js (keeps everything else self-only) -->
   <meta http-equiv="Content-Security-Policy" content="
     default-src 'self';
     script-src 'self' https://platform.twitter.com 'unsafe-inline' 'unsafe-eval';
     style-src 'self' 'unsafe-inline';
     img-src 'self' data: https://pbs.twimg.com https://abs.twimg.com https://ton.twimg.com;
-    connect-src 'self' https://syndication.twitter.com https://pbs.twimg.com https://ton.twimg.com;
-    frame-src https://platform.twitter.com https://syndication.twitter.com;
-    font-src 'self';
+    connect-src 'self' https://syndication.twitter.com https://cdn.syndication.twimg.com https://pbs.twimg.com https://ton.twimg.com;
+    frame-src https://platform.twitter.com https://syndication.twitter.com https://twitter.com;
+    font-src 'self' https://abs.twimg.com;
     media-src 'self';
     base-uri 'self';
     form-action 'self';
   ">
+
+  <!-- Help the widget start faster when allowed -->
+  <link rel="preconnect" href="https://platform.twitter.com" crossorigin>
+  <link rel="preconnect" href="https://syndication.twitter.com" crossorigin>
+  <link rel="preconnect" href="https://pbs.twimg.com" crossorigin>
 
   <style>
     :root{ --navy:#0E2341; --gold:#F6C445; --blue:#1E4E89; --text:#F7F7F7; }
     *{ box-sizing:border-box; margin:0; padding:0; }
     html,body{ height:100%; overflow-x:hidden; }
 
-    .video-bg {
-      position: fixed;
-      top: 50%; left: 50%;
-      min-width: 100%;
-      min-height: 100%;
-      transform: translate(-50%, -50%) scale(1.05);
-      object-fit: cover;
-      z-index: -2;
-      will-change: transform;
+    /* Background video */
+    .video-bg{
+      position:fixed; top:50%; left:50%;
+      min-width:100%; min-height:100%;
+      transform:translate(-50%,-50%) scale(1.05);
+      object-fit:cover; z-index:-2; will-change:transform;
     }
-
-    .overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(14,35,65,0.65);
-      z-index: -1;
-      pointer-events:none;
-    }
+    /* Readability overlay */
+    .overlay{ position:fixed; inset:0; background:rgba(14,35,65,.65); z-index:-1; pointer-events:none; }
 
     body{
       color:var(--text);
@@ -95,6 +91,7 @@
       font-size:clamp(18px,3.5vw,22px);
       box-shadow:0 6px 0 #caa02b, 0 0 20px rgba(246,196,69,.85);
       transition:transform .15s ease, box-shadow .15s ease;
+      perspective:500px;
     }
     .cta:hover{ box-shadow:0 8px 24px rgba(246,196,69,1), 0 6px 0 #caa02b }
     .cta:active{ transform:translateY(2px); box-shadow:0 4px 0 #caa02b }
@@ -107,6 +104,7 @@
   </style>
 </head>
 <body>
+  <!-- Background video -->
   <video id="bg-video" class="video-bg" autoplay muted loop playsinline>
     <source src="/assets/bg.webm" type="video/webm">
     <source src="/assets/bg.mp4" type="video/mp4">
@@ -124,46 +122,112 @@
     <div class="sub">
       Powered by the WIPE community • #WIPEcoin
       <br/>
-      <a class="twitter-btn" href="https://twitter.com/WIPE_it_UP" target="_blank">🐦 Follow us on Twitter</a>
+      <a class="twitter-btn" href="https://twitter.com/WIPE_it_UP" target="_blank" rel="noopener">🐦 Follow us on Twitter</a>
     </div>
   </main>
 
-  <!-- Twitter Feed Embed (no API calls, no rate limits) -->
+  <!-- X / Twitter feed (lazy, single-shot, with fallback) -->
   <div class="wrap" style="max-width:600px;">
-    <a class="twitter-timeline"
-       data-width="500"
-       data-height="600"
-       data-theme="dark"
-       href="https://twitter.com/WIPE_it_UP">
-      Tweets by WIPE_it_UP
-    </a>
-    <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+    <h3 style="margin:0 0 10px; color:#F6C445; text-shadow:0 0 8px rgba(246,196,69,.6);">
+      Latest Tweets
+    </h3>
+
+    <div id="x-feed"
+         style="min-height: 320px; display:flex; align-items:center; justify-content:center;">
+      <div id="x-fallback" style="display:none; text-align:center; line-height:1.45;">
+        <p style="margin:0 0 8px; opacity:.9;">Can’t load the timeline right now.</p>
+        <p style="margin:0 0 14px; opacity:.9;">View the latest posts on X ⤵</p>
+        <a href="https://twitter.com/WIPE_it_UP" target="_blank" rel="noopener"
+           style="display:inline-block; padding:10px 14px; border-radius:10px;
+                  background:#1E4E89; color:#fff; text-decoration:none; font-weight:700;">
+          Open @WIPE_it_UP on X
+        </a>
+      </div>
+      <div id="x-loading" style="opacity:.85;">Loading…</div>
+    </div>
   </div>
 
   <script>
+  // Subtle parallax for the background video
   (function(){
     const video = document.getElementById('bg-video');
-    let tx = 0, ty = 0, cx = 0, cy = 0;
+    let tx=0, ty=0, cx=0, cy=0;
     const max = 15, ease = 0.05;
 
     function set(x,y){
-      const nx = (x / innerWidth) * 2 - 1;
-      const ny = (y / innerHeight) * 2 - 1;
-      tx = nx * max;
-      ty = ny * max;
+      const nx = (x/innerWidth)*2 - 1;
+      const ny = (y/innerHeight)*2 - 1;
+      tx = nx * max; ty = ny * max;
     }
-
     addEventListener('mousemove', e => set(e.clientX, e.clientY), {passive:true});
-    addEventListener('touchmove', e => {
-      if(e.touches[0]) set(e.touches[0].clientX, e.touches[0].clientY);
-    }, {passive:true});
+    addEventListener('touchmove', e => { if(e.touches[0]) set(e.touches[0].clientX, e.touches[0].clientY); }, {passive:true});
 
     (function loop(){
-      cx += (tx - cx) * ease;
-      cy += (ty - cy) * ease;
+      cx += (tx - cx) * ease; cy += (ty - cy) * ease;
       video.style.transform = `translate(-50%, -50%) scale(1.05) translate(${cx.toFixed(2)}px, ${cy.toFixed(2)}px)`;
       requestAnimationFrame(loop);
     })();
+  })();
+
+  // Lazy-load X timeline with single render + graceful fallback
+  (function(){
+    if (window.__X_WIDGET_ATTACHED__) return;
+    window.__X_WIDGET_ATTACHED__ = true;
+
+    const container = document.getElementById('x-feed');
+    const fallback  = document.getElementById('x-fallback');
+    const loading   = document.getElementById('x-loading');
+
+    let scriptInjected = false;
+    let rendered = false;
+    let gaveUp = false;
+
+    function showFallback(){
+      if (rendered || gaveUp) return;
+      gaveUp = true;
+      loading.style.display = 'none';
+      fallback.style.display = 'block';
+    }
+
+    function renderTimeline(){
+      if (rendered || !window.twttr || !twttr.widgets) return;
+      twttr.widgets.createTimeline(
+        { sourceType: 'profile', screenName: 'WIPE_it_UP' },
+        container,
+        { theme: 'dark', height: 600, chrome: 'noheader nofooter noborders transparent', dnt: false }
+      ).then(function(el){
+        if (el) {
+          rendered = true;
+          loading.style.display = 'none';
+          fallback.style.display = 'none';
+        } else {
+          showFallback();
+        }
+      }).catch(showFallback);
+    }
+
+    function injectScript(){
+      if (scriptInjected) return;
+      scriptInjected = true;
+      const s = document.createElement('script');
+      s.src = 'https://platform.twitter.com/widgets.js';
+      s.async = true;
+      s.charset = 'utf-8';
+      s.onload = renderTimeline;
+      // If widgets.js loads but refuse to render (429 etc.), fallback
+      setTimeout(function(){ if (!rendered) showFallback(); }, 4000);
+      document.head.appendChild(s);
+    }
+
+    const io = new IntersectionObserver((entries) => {
+      if (entries.some(e => e.isIntersecting)){
+        injectScript();
+        io.disconnect();
+      }
+    }, { rootMargin: '120px 0px 120px 0px', threshold: 0.01 });
+
+    io.observe(container);
+    setTimeout(function(){ if (!rendered) showFallback(); }, 10000);
   })();
   </script>
 </body>
