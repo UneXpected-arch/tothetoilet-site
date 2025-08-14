@@ -1,5 +1,0 @@
-{
-  "crons": [
-    { "path": "/api/twitter-media?refresh=1", "schedule": "*/10 * * * *" }
-  ]
-}
