@@ -5,7 +5,7 @@
       "headers": [
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' https://platform.twitter.com 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://pbs.twimg.com https://abs.twimg.com; connect-src 'self' https://api.twitter.com https://syndication.twitter.com https://pbs.twimg.com https://ton.twitter.com; frame-src https://platform.twitter.com https://syndication.twitter.com; font-src 'self'; media-src 'self'; base-uri 'self'; form-action 'self'"
+          "value": "default-src 'self'; script-src 'self' https://platform.twitter.com 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://pbs.twimg.com https://abs.twimg.com https://ton.twimg.com; connect-src 'self' https://syndication.twitter.com https://pbs.twimg.com https://ton.twimg.com; frame-src https://platform.twitter.com https://syndication.twitter.com; font-src 'self'; media-src 'self'; base-uri 'self'; form-action 'self'"
         }
       ]
     }
