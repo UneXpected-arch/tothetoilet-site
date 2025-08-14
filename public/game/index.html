@@ -63,7 +63,7 @@
 
 <div id="ui">
   <div class="hud">
-    <!-- ✅ HUD logo fix: path relative to /public/game/ -->
+    <!-- HUD logo fix: path relative to /public/game/ -->
     <span class="brand"><img src="../assets/logo.png" alt="WIPE"><b>WIPE</b></span>
     <span id="score">Score: 0</span>
     <span id="combo">Combo: x1</span>
@@ -73,7 +73,6 @@
 
   <div id="start" class="center">
     <div class="panel">
-      <!-- ✅ Backdrop + coin overlay -->
       <div class="backdrop-wrap">
         <div class="backdrop-img" aria-hidden="true"></div>
         <img class="coin-overlay" src="../assets/coin.png" alt="">
@@ -148,7 +147,7 @@
   function reset(){ S.score=0; S.combo=1; S.lives=3; S.coins.length=0; S.time=0; S.spawnTimer=0; S.spawnRate=800; S.speed=220; S.tp.x = canvas.width/2; }
   function start(){ reset(); S.running=true; S.over=false; $start.style.display='none'; $over.style.display='none'; last=performance.now(); requestAnimationFrame(loop); }
 
-  // ✅ Dispatch a gameOver event so leaderboard.js can save immediately
+  // Dispatch a gameOver event so leaderboard.js can save immediately
   function over(){
     S.running=false; S.over=true; S.best=Math.max(S.best,S.score);
     $final.textContent = `Score: ${S.score}  •  Best: ${S.best}`;
@@ -172,7 +171,17 @@
   addEventListener('pointerup', ()=> dragging=false);
   const keys={}; addEventListener('keydown', e=>keys[e.key]=true); addEventListener('keyup', e=>keys[e.key]=false);
 
-  function spawn(){ const rare = Math.random() < 0.08; S.coins.push({ x: rand(40, canvas.width-40), y: -30, r: rare? 24:18, v: S.speed*(rare?.95:1), type: rare? 'diamond':'gold', rot: rand(0, Math.PI*2) }); }
+  function spawn(){
+    const rare = Math.random() < 0.08;
+    S.coins.push({
+      x: rand(40, canvas.width-40),
+      y: -30,
+      r: rare ? 24 : 18,
+      v: S.speed * (rare ? 0.95 : 1),   // <-- fixed ternary
+      type: rare ? 'diamond' : 'gold',
+      rot: rand(0, Math.PI*2)
+    });
+  }
   function collide(c,tp){ const cx = clamp(c.x, tp.x - tp.w/2, tp.x + tp.w/2); const cy = clamp(c.y, tp.y - tp.h/2, tp.y + tp.h/2); const dx=c.x-cx, dy=c.y-cy; return dx*dx+dy*dy <= c.r*c.r; }
 
   function drawTP(tp){
@@ -181,7 +190,6 @@
     ctx.fillStyle='#f1f4f8'; ctx.strokeStyle='rgba(0,0,0,.25)'; ctx.lineWidth=2;
     ctx.beginPath(); ctx.roundRect(-w/2,-h/2,w,h,r); ctx.fill(); ctx.stroke();
     ctx.fillStyle='#b8894d'; ctx.beginPath(); ctx.ellipse(-w*0.35,0,14,14,0,0,Math.PI*2); ctx.fill();
-    // WIPE logo watermark
     ctx.fillStyle='rgba(30,78,137,.70)'; ctx.font='900 18px system-ui'; ctx.textAlign='center'; ctx.fillText('WIPE',0,6);
     ctx.restore();
   }
@@ -241,7 +249,6 @@
 })();
 </script>
 
-<!-- Leaderboard UI mount -->
 <link rel="stylesheet" href="/game/js/leaderboard.css">
 <div id="wipe-leader"></div>
 <script src="/game/js/leaderboard.js"></script>
