@@ -2,376 +2,360 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>WIPE: Catch The Gains</title>
+<link rel="icon" href="/game/assets/favicon.png" type="image/png" />
 <meta name="description" content="WIPE mini-game — catch coins with a toilet paper roll and post your score.">
-<link rel="icon" href="/game/assets/favicon.png" type="image/png">
 
 <style>
   :root{
-    --bg:#0E2341; --tile:#122b52; --accent:#1E4E89; --gold:#F6C445; --text:#F7F7F7;
-    --panel:#0f2a52; --panel2:#0b2346;
+    --bg:#0E2341; --tile:#122b52; --accent:#1E4E89;
+    --gold:#F6C445; --text:#F7F7F7;
   }
-  *{box-sizing:border-box}
-  html,body{margin:0;height:100%;background:#000;color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial}
-  canvas{display:block;width:100vw;height:100vh;touch-action:none}
+  html,body{margin:0;height:100%;background:#000;color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial;overflow:hidden}
+  canvas{display:block;width:100vw;height:100vh}
 
-  /* PRE-GAME BG: turn on while start panel is visible */
-  body.pregame{
-    background:
-      radial-gradient(1600px 800px at 50% -10%, #1c396b 0%, #0E2341 65%),
-      repeating-linear-gradient(0deg, #102446, #102446 32px, #0c1f3d 32px, #0c1f3d 64px);
-    background-color:#0E2341;
-    background-image:url('/game/assets/background.png');
-    background-size:cover;background-position:center;
-    background-repeat:no-repeat;
+  /* HUD top */
+  .hudbar{
+    position:fixed;left:10px;top:10px;z-index:10;display:flex;gap:14px;align-items:center;font-weight:800;text-shadow:0 2px 5px rgba(0,0,0,.35)
   }
-
-  /* UI */
-  #ui{position:fixed;inset:0;pointer-events:none}
-  .hud{position:absolute;left:12px;top:10px;font-weight:800;text-shadow:0 2px 6px rgba(0,0,0,.35);display:flex;gap:12px;align-items:center}
   .brand{display:inline-flex;align-items:center;gap:8px;padding:4px 10px;border-radius:999px;background:rgba(30,78,137,.28);border:1px solid rgba(255,255,255,.12)}
   .brand img{width:18px;height:18px;border-radius:50%}
-  .right{position:absolute;right:12px;top:10px;font-weight:700;opacity:.85}
-  .center{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center}
-  .panel{pointer-events:auto;background:linear-gradient(180deg,var(--panel),var(--panel2));
-    border:1px solid rgba(255,255,255,.12);border-radius:18px;padding:22px 20px;max-width:680px;width:min(92vw,680px);
-    box-shadow:0 10px 40px rgba(0,0,0,.35)}
-  .panel .hero{width:100%;height:160px;border-radius:14px;overflow:hidden;background:#0f2545;display:flex;align-items:center;justify-content:center;margin-bottom:14px}
-  .panel .hero img{max-width:100%;height:100%;object-fit:cover}
-  .panel h1{margin:.25rem 0 .5rem;font-size:clamp(20px,4.5vw,28px)}
-  .panel p{margin:.25rem 0 .75rem;opacity:.9}
-  .actions{display:flex;gap:10px;justify-content:center;margin-top:10px;flex-wrap:wrap}
-  button{pointer-events:auto;cursor:pointer;border:0;border-radius:12px;padding:12px 18px;font-weight:800}
-  .primary{background:var(--accent);color:#061b2c}
-  .ghost{background:transparent;color:var(--text);border:1px solid rgba(255,255,255,.25)}
-  .credits{position:absolute;right:12px;bottom:10px;font-size:12px;opacity:.7}
 
-  /* Top Degens ribbon */
-  #top-degens{position:fixed;left:50%;transform:translateX(-50%);top:8px;z-index:50;pointer-events:auto}
-  #top-degens .bar{display:flex;gap:8px;background:rgba(10,25,45,.72);backdrop-filter:blur(4px);
-    border:1px solid rgba(255,255,255,.12);border-radius:999px;padding:6px 10px;align-items:center}
-  #top-degens .bar b{margin-right:4px}
-  #top-degens .name{opacity:.9}
-  #set-name{margin-left:8px;border-radius:999px;border:1px solid rgba(255,255,255,.2);background:transparent;color:#fff;padding:5px 10px}
-  #save-name{border-radius:999px;border:0;background:#2166d1;color:#061b2c;padding:6px 10px;font-weight:800}
+  /* Leaderboard mini bar */
+  .lbbar{
+    position:fixed;left:150px;top:8px;z-index:10;display:flex;gap:8px;align-items:center;background:rgba(14,35,65,.55);
+    border:1px solid rgba(255,255,255,.15);padding:6px 10px;border-radius:12px;backdrop-filter:blur(2px)
+  }
+  .lbbar input{height:28px;border-radius:8px;border:1px solid rgba(255,255,255,.15);background:#0e2341;color:#fff;padding:0 8px;outline:0}
+  .lbbar button{height:28px;border-radius:8px;border:0;background:#2c6cca;color:#061b2c;font-weight:800;cursor:pointer;padding:0 10px}
+  .lbbar .top{font-size:13px;opacity:.85}
 
-  /* mobile-friendly hit area hint label on catcher */
-  .tp-label{position:absolute;left:0;top:0;transform:translate(-50%,-120%);background:rgba(10,25,45,.75);
-    color:#fff;border:1px solid rgba(255,255,255,.15);border-radius:999px;font-size:12px;padding:2px 8px;display:none}
-  @media (hover:none){ .tp-label{display:block} }
+  /* Start + Game Over panels */
+  .center{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
+  .panel{
+    pointer-events:auto;background:rgba(14,35,65,.92);border:1px solid rgba(255,255,255,.12);
+    border-radius:16px;padding:22px;max-width:780px;width:min(92%,780px);box-shadow:0 10px 40px rgba(0,0,0,.45)
+  }
+  .hero{height:150px;border-radius:12px;background:#081a33 url('/game/assets/start-panel.png') center/cover no-repeat;margin-bottom:16px;border:1px solid rgba(255,255,255,.08)}
+  .h1{font-weight:900;font-size:clamp(18px,3.8vw,28px);margin:0 0 8px}
+  .muted{opacity:.85}
+  .actions{display:flex;gap:10px;margin-top:12px}
+  .btn{border:0;border-radius:12px;padding:12px 18px;font-weight:900;cursor:pointer}
+  .btn.primary{background:#2c6cca;color:#061b2c}
+  .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,.25);color:#fff}
+  .credits{position:fixed;right:10px;bottom:8px;font-size:12px;opacity:.6}
+
+  /* Backdrop image (full game) */
+  .bgimg{
+    position:fixed;inset:0;z-index:-1;background:#06172e url('/game/assets/background.png') center/cover no-repeat;
+  }
+  @media (max-width:700px){
+    .lbbar{left:10px;top:52px}
+  }
 </style>
 </head>
-<body class="pregame">
+<body>
+<div class="bgimg" id="bgimg"></div>
 <canvas id="game"></canvas>
 
-<!-- Top Degens -->
-<div id="top-degens">
-  <div class="bar">
-    <b>Top Degens:</b>
-    <span id="degens-list" class="name">loading…</span>
-    <input id="set-name" placeholder="your @name" maxlength="22">
-    <button id="save-name">Save</button>
+<!-- HUD -->
+<div class="hudbar">
+  <span class="brand"><img src="/game/assets/logo.png" alt=""><b>WIPE</b></span>
+  <span id="hudScore">Score: 0</span>
+  <span id="hudCombo">Combo: x1</span>
+  <span id="hudLives">Lives: 3</span>
+</div>
+
+<!-- Leaderboard mini -->
+<div class="lbbar">
+  <b>Top Degens:</b>
+  <span id="lbTop" class="top">loading…</span>
+  <input id="lbName" placeholder="your @name" maxlength="24">
+  <button id="lbSave">Save</button>
+</div>
+
+<!-- START -->
+<div id="startWrap" class="center">
+  <div class="panel">
+    <div class="hero"></div>
+    <div class="h1">WIPE: Catch the Gains 💎</div>
+    <div class="muted">Move the TP roll to <b>catch coins</b>. Miss 3 and it’s <i>game over</i>.</div>
+    <div class="actions">
+      <button class="btn primary" id="startBtn">Start</button>
+      <button class="btn ghost" id="muteBtn">Sound: Off</button>
+    </div>
   </div>
 </div>
 
-<div id="ui">
-  <div class="hud">
-    <span class="brand"><img src="/game/assets/logo.png" alt=""><b>WIPE</b></span>
-    <span id="score">Score: 0</span>
-    <span id="combo">Combo: x1</span>
-    <span id="lives">Lives: 3</span>
-  </div>
-  <div class="right">Drag / Touch or ← →</div>
-
-  <div id="start" class="center">
-    <div class="panel">
-      <div class="hero">
-        <img id="hero-img" src="/game/assets/start-panel.png" alt="WIPE start">
-      </div>
-      <h1>WIPE: Catch the Gains 💎</h1>
-      <p>Move the TP roll to <b>catch coins</b>. Miss 3 and it’s <i>game over</i>.</p>
-      <div class="actions">
-        <button id="startBtn" class="primary">Start</button>
-        <button id="muteBtn" class="ghost">Sound: Off</button>
-      </div>
+<!-- GAME OVER -->
+<div id="overWrap" class="center" style="display:none;">
+  <div class="panel">
+    <div class="h1">Flushed… 💀</div>
+    <div id="finalText" class="muted"></div>
+    <div class="actions">
+      <button class="btn primary" id="againBtn">Play Again</button>
+      <button class="btn ghost" id="shareBtn">Share to X</button>
     </div>
   </div>
-
-  <div id="gameover" class="center" style="display:none;">
-    <div class="panel">
-      <h2>Flushed… 💀</h2>
-      <p id="final"></p>
-      <div class="actions">
-        <button id="again" class="primary">Play Again</button>
-        <button id="share" class="ghost">Share to X</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="credits">WIPE mini-game</div>
 </div>
+
+<div class="credits">WIPE mini-game</div>
 
 <script>
 (()=>{
-  // ------- asset paths (under /public/game/assets/) -------
-  const ASSET = {
-    bg: '/game/assets/backdrop.png',               // IN-GAME background (catchier)
-    pre: '/game/assets/background.png',            // PRE-GAME page bg (body.pregame)
-    panel: '/game/assets/start-panel.png',         // Start card image
-    tp: '/game/assets/tp-roll.png',                // catcher
-    coinG: '/game/assets/coin_gold.png',
-    coinD: '/game/assets/coin_diamond.png',
-    logo: '/game/assets/logo.png',                 // for brand pill (already used)
-    favicon: '/game/assets/favicon.png'
-  };
+  /* ----------------- canvas & helpers ----------------- */
+  const cv = document.getElementById('game'), ctx = cv.getContext('2d');
+  function fit(){ const dpr = Math.min(window.devicePixelRatio||1,2); cv.width = innerWidth*dpr; cv.height = innerHeight*dpr; ctx.setTransform(dpr,0,0,dpr,0,0); }
+  addEventListener('resize', fit, {passive:true}); fit();
 
-  // ------- dom -------
-  const canvas = document.getElementById('game');
-  const ctx = canvas.getContext('2d');
-  const $score = document.getElementById('score');
-  const $combo = document.getElementById('combo');
-  const $lives = document.getElementById('lives');
-  const $start = document.getElementById('start');
+  const $score = document.getElementById('hudScore');
+  const $combo = document.getElementById('hudCombo');
+  const $lives = document.getElementById('hudLives');
+  const $startWrap = document.getElementById('startWrap');
+  const $overWrap = document.getElementById('overWrap');
+  const $finalText = document.getElementById('finalText');
   const $startBtn = document.getElementById('startBtn');
+  const $againBtn = document.getElementById('againBtn');
   const $muteBtn = document.getElementById('muteBtn');
-  const $over = document.getElementById('gameover');
-  const $final = document.getElementById('final');
-  const $again = document.getElementById('again');
-  const $share = document.getElementById('share');
+  const $shareBtn = document.getElementById('shareBtn');
+  const $lbTop = document.getElementById('lbTop');
+  const $lbName = document.getElementById('lbName');
+  const $lbSave = document.getElementById('lbSave');
 
-  // Top Degens UI
-  const $list = document.getElementById('degens-list');
-  const $setName = document.getElementById('set-name');
-  const $saveName = document.getElementById('save-name');
-
-  // ------- resize -------
-  function fit(){ canvas.width = innerWidth * devicePixelRatio; canvas.height = innerHeight * devicePixelRatio; ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);}
-  addEventListener('resize', fit,{passive:true}); fit();
-
-  // ------- images preload -------
-  const IM = {};
-  function loadImg(src){
-    return new Promise(res=>{
-      const i = new Image(); i.decoding = 'async'; i.onload = ()=>res(i); i.onerror = ()=>res(null); i.src = src;
-    });
-  }
-  Promise.all(Object.entries(ASSET).map(async([k,v])=>{ IM[k] = await loadImg(v); })).then(()=>{ /* noop */ });
-
-  // ------- sound -------
-  let soundOn = false; let audioCtx = null;
-  function beep(freq=880, dur=80, vol=0.06) {
-    if (!soundOn) return;
-    try {
-      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      const t0 = audioCtx.currentTime;
-      const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
-      o.type = 'square'; o.frequency.value = freq;
-      g.gain.value = vol; o.connect(g); g.connect(audioCtx.destination);
-      o.start(t0); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur/1000); o.stop(t0 + dur/1000 + 0.01);
-    } catch {}
-  }
-  $muteBtn.onclick = () => { soundOn = !soundOn; $muteBtn.textContent = 'Sound: ' + (soundOn ? 'On':'Off'); if (soundOn) beep(660,60,0.03); };
-
-  // ------- game state -------
-  const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-  const S = { running:false,over:false, score:0, combo:1, lives:3, best:0,
-    time:0, spawnTimer:0, spawnRate:800, speed:220,
-    coins:[], particles:[],
-    tp:{ x:innerWidth*0.5, y:innerHeight-90, w:isTouch? 220:160, h:isTouch? 56:40, hitMul:isTouch?1.35:1 }
+  /* ----------------- assets ----------------- */
+  const IMGS = {};
+  function img(src){ return new Promise((res)=>{ const i=new Image(); i.onload=()=>res(i); i.src=src; }); }
+  const ASSET = {
+    bg1: '/game/assets/background.png',
+    bg2: '/game/assets/backdrop.png',
+    tp : '/game/assets/tp-roll.png',
+    g  : '/game/assets/coin_gold.png',
+    d  : '/game/assets/coin_diamond.png'
   };
 
-  // ------- helpers -------
-  const rand=(a,b)=>Math.random()*(b-a)+a;
-  const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+  Promise.all([
+    img(ASSET.bg1).catch(()=>null),
+    img(ASSET.bg2).catch(()=>null),
+    img(ASSET.tp),
+    img(ASSET.g),
+    img(ASSET.d)
+  ]).then(([bg1,bg2,tp,g,d])=>{
+    IMGS.bg = bg1 || bg2 || null; IMGS.tp = tp; IMGS.g = g; IMGS.d = d;
+  });
 
-  function coverDraw(img,x,y,w,h){
-    if(!img){ ctx.fillStyle='#081a33'; ctx.fillRect(x,y,w,h); return; }
-    const iw=img.naturalWidth, ih=img.naturalHeight;
-    const r=Math.max(w/iw,h/ih), nw=iw*r, nh=ih*r, cx=x+(w-nw)/2, cy=y+(h-nh)/2;
-    ctx.drawImage(img,cx,cy,nw,nh);
+  /* ----------------- audio toggle ----------------- */
+  let soundOn = false, actx=null;
+  function beep(freq=880, dur=70, vol=0.06){
+    if(!soundOn) return;
+    try{
+      if(!actx) actx = new (window.AudioContext||window.webkitAudioContext)();
+      const t0=actx.currentTime, o=actx.createOscillator(), g=actx.createGain();
+      o.type='square'; o.frequency.value=freq; g.gain.value=vol;
+      o.connect(g); g.connect(actx.destination);
+      o.start(t0); g.gain.exponentialRampToValueAtTime(0.0001, t0+dur/1000); o.stop(t0+dur/1000+.02);
+    }catch{}
   }
+  $muteBtn.onclick = ()=>{ soundOn=!soundOn; $muteBtn.textContent = 'Sound: '+(soundOn?'On':'Off'); if(soundOn) beep(660,60,0.03); };
 
-  // ------- mobile-friendly catcher label (visual hint) -------
-  const tpLabel = document.createElement('div'); tpLabel.className='tp-label'; tpLabel.textContent='W I P E';
-  document.body.appendChild(tpLabel);
+  /* ----------------- game state ----------------- */
+  const S = {
+    running:false, over:false,
+    score:0, combo:1, lives:3, best:0,
+    speed:220, spawnRate:800, spawnTimer:0, coins:[],
+    tp:{ x:innerWidth/2, y:innerHeight-90, w:200, h:52 },
+    pops:[], parts:[]
+  };
 
   function reset(){
-    S.score=0; S.combo=1; S.lives=3; S.coins.length=0; S.particles.length=0;
-    S.time=0; S.spawnTimer=0; S.spawnRate=800; S.speed=220; S.tp.x = innerWidth/2;
+    S.running=false; S.over=false;
+    S.score=0; S.combo=1; S.lives=3; S.speed=220; S.spawnRate=800; S.spawnTimer=0;
+    S.coins.length=0; S.pops.length=0; S.parts.length=0;
+    S.tp.x = innerWidth/2;
+    updateHUD();
   }
   function start(){
-    document.body.classList.remove('pregame');
-    reset(); S.running=true; S.over=false; $start.style.display='none'; $over.style.display='none'; last=performance.now(); requestAnimationFrame(loop);
+    reset(); S.running=true; $startWrap.style.display='none'; $overWrap.style.display='none';
+    last = performance.now(); requestAnimationFrame(loop);
   }
-  function over(){
-    S.running=false; S.over=true; S.best=Math.max(S.best,S.score);
-    $final.textContent = `Score: ${S.score}  •  Best: ${S.best}`;
-    $over.style.display='flex';
-
-    // broadcast for leaderboard
-    dispatchEvent(new CustomEvent('wipe:gameover', { detail:{ score:S.score, combo:S.combo, time:S.time } }));
+  function endGame(){
+    S.running=false; S.over=true;
+    S.best = Math.max(S.best, S.score);
+    $finalText.textContent = `Score: ${S.score} • Best: ${S.best}`;
+    $overWrap.style.display='flex';
+    document.dispatchEvent(new CustomEvent('wipe:gameover', { detail:{ score:S.score }}));
   }
 
-  // ------- input -------
-  $startBtn.onclick = start; $again.onclick = start;
-  $share.onclick = () => {
-    const text = `I scored ${S.score} in WIPE: Catch the Gains 🧻💰 — can you beat me? #WIPEcoin`;
-    const url = location.href;
-    const u = new URL('https://twitter.com/intent/tweet'); u.searchParams.set('text',text); u.searchParams.set('url',url); window.open(u,'_blank');
+  $startBtn.onclick = start; $againBtn.onclick = start;
+  $shareBtn.onclick = ()=>{
+    const u=new URL('https://twitter.com/intent/tweet');
+    u.searchParams.set('text',`I scored ${S.score} in WIPE: Catch the Gains 🧻💰 — can you beat me? #WIPEcoin`);
+    u.searchParams.set('url', location.origin);
+    window.open(u.toString(),'_blank');
   };
-  let dragging=false, dragOffset=0;
-  canvas.addEventListener('pointerdown', e=>{ dragging=true; dragOffset = clamp(e.clientX - S.tp.x, -S.tp.w/2, S.tp.w/2); },{passive:true});
-  addEventListener('pointermove', e=>{ if (!dragging) return; S.tp.x = clamp(e.clientX - dragOffset, S.tp.w/2, innerWidth - S.tp.w/2); tpLabel.style.left=S.tp.x+'px'; tpLabel.style.top=(S.tp.y*devicePixelRatio/devicePixelRatio)+'px'; },{passive:true});
-  addEventListener('pointerup', ()=> dragging=false);
-  const keys={}; addEventListener('keydown', e=>keys[e.key]=true); addEventListener('keyup', e=>keys[e.key]=false);
 
-  // ------- coins / particles -------
-  function spawn(){
-    const rare = Math.random() < 0.12; // more diamonds for fun
-    S.coins.push({ x: rand(40, innerWidth-40), y: -30, r: rare? 22:18, v: S.speed*(rare?.95:1), type: rare? 'diamond':'gold', rot: rand(0, Math.PI*2) });
+  /* ----------------- leaderboard (file-store API) ----------------- */
+  async function loadScores(){
+    try{ const r=await fetch('/api/scores'); return await r.json(); }catch{ return []; }
   }
-  function collide(c,tp){ // expanded hitbox on mobile
-    const hw=(tp.w*tp.hitMul)/2, hh=(tp.h*tp.hitMul)/2;
-    const cx = clamp(c.x, tp.x - hw, tp.x + hw);
-    const cy = clamp(c.y, tp.y - hh, tp.y + hh);
-    const dx=c.x-cx, dy=c.y-cy; return dx*dx+dy*dy <= (c.r+2)*(c.r+2);
+  async function saveScore(name, score){
+    try{ await fetch('/api/scores',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,score})}); }catch{}
   }
-  function spark(x,y,good=true){
-    for(let i=0;i<(good?16:8);i++){
-      S.particles.push({x,y, vx:rand(-2,2), vy:rand(-2,-0.5), a:1, g:.05, c:good?'#bde0ff':'#ffcf6a'});
+  function renderTop(scores){
+    if(!scores || !scores.length){ $lbTop.textContent='—'; return; }
+    $lbTop.textContent = scores.slice(0,5).map(s=>`${s.name}:${s.score}`).join(' · ');
+  }
+  loadScores().then(renderTop);
+  document.addEventListener('wipe:gameover', async e=>{
+    const name = ($lbName.value||'anon').slice(0,24);
+    await saveScore(name, e.detail.score);
+    const s=await loadScores(); renderTop(s);
+  });
+  $lbSave.onclick = async ()=>{
+    await saveScore(($lbName.value||'anon').slice(0,24), S.score);
+    const s=await loadScores(); renderTop(s);
+  };
+
+  /* ----------------- input ----------------- */
+  let dragging=false, dx=0;
+  cv.addEventListener('pointerdown', e=>{dragging=true; dx = e.clientX - S.tp.x;});
+  addEventListener('pointerup', ()=>dragging=false);
+  addEventListener('pointermove', e=>{ if(!dragging) return; S.tp.x = clamp(e.clientX - dx, S.tp.w/2, innerWidth - S.tp.w/2); }, {passive:true});
+  const keys={}; addEventListener('keydown',e=>keys[e.key]=true); addEventListener('keyup',e=>keys[e.key]=false);
+
+  /* ----------------- helpers & visuals ----------------- */
+  const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+  const rand =(a,b)=>Math.random()*(b-a)+a;
+
+  function drawTP(tp){
+    const {x,y,w,h}=tp;
+    const img = IMGS.tp;
+    if(img){ const r=h/img.height; ctx.drawImage(img, x-w/2, y-h/2, w, h); }
+    else{
+      // fallback styled capsule
+      ctx.fillStyle='#f1f4f8'; ctx.strokeStyle='rgba(0,0,0,.25)'; ctx.lineWidth=2;
+      ctx.beginPath(); ctx.roundRect(x-w/2,y-h/2,w,h,18); ctx.fill(); ctx.stroke();
+      ctx.fillStyle='rgba(30,78,137,.70)'; ctx.font='900 18px system-ui'; ctx.textAlign='center'; ctx.fillText('WIPE',x,y+6);
+    }
+  }
+
+  function drawCoin(c){
+    ctx.save(); ctx.translate(c.x,c.y);
+    ctx.rotate(c.rot);
+    const img = (c.type==='diamond') ? IMGS.d : IMGS.g;
+    if(img){
+      const d = c.r*2; ctx.drawImage(img, -c.r, -c.r, d, d);
+    }else{
+      ctx.fillStyle = c.type==='diamond' ? '#9fe0ff' : '#ffd76a';
+      ctx.beginPath(); ctx.arc(0,0,c.r,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle='#083b5a'; ctx.font='bold 14px system-ui'; ctx.textAlign='center'; ctx.fillText(c.type==='diamond'?'♦':'$',0,5);
+    }
+    ctx.restore();
+  }
+
+  function spawnCoin(){
+    const rare = Math.random()<0.12;
+    S.coins.push({
+      x:rand(40, innerWidth-40), y:-30, r: rare?24:18,
+      v:S.speed*(rare?.95:1), type: rare?'diamond':'gold', rot:rand(0,Math.PI*2)
+    });
+  }
+
+  /* particles (sparkles) */
+  function spawnSpark(x,y,clr){
+    for(let i=0;i<16;i++){
+      S.parts.push({ x, y, vx:rand(-2,2), vy:rand(-2,-0.5), a:1, clr:clr||'#ffd76a' });
     }
   }
   function drawParticles(){
-    for(let i=S.particles.length-1;i>=0;i--){
-      const p=S.particles[i]; p.x+=p.vx; p.y+=p.vy; p.vy+=p.g; p.a-=.02;
-      if(p.a<=0){ S.particles.splice(i,1); continue; }
-      ctx.globalAlpha=p.a; ctx.fillStyle=p.c; ctx.beginPath(); ctx.arc(p.x,p.y,2.2,0,Math.PI*2); ctx.fill(); ctx.globalAlpha=1;
+    for(let i=S.parts.length-1;i>=0;i--){
+      const p=S.parts[i]; p.x+=p.vx; p.y+=p.vy; p.a-=0.04;
+      if(p.a<=0){ S.parts.splice(i,1); continue; }
+      ctx.globalAlpha = Math.max(0,p.a);
+      ctx.fillStyle = p.clr; ctx.fillRect(p.x,p.y,2,2); ctx.globalAlpha=1;
     }
   }
 
-  function +popup(x,y,str,clr){
-    // hack avoided; we’ll inline popup via particles text
-  }
-
-  function popup(x,y,text,clr){
-    S.particles.push({ text, x, y, a:1, up:0, clr });
+  /* popup text via particles layer */
+  function popup(x,y,str,clr){
+    S.pops.push({ text:str, x, y, up:0, a:1, clr:clr||'#fff' });
   }
   function drawPopups(){
-    for(let i=S.particles.length-1;i>=0;i--){
-      const p=S.particles[i]; if(!p.text) continue;
-      p.up += 0.8; p.a -= 0.02;
-      ctx.globalAlpha=Math.max(0,p.a); ctx.fillStyle=p.clr||'#fff';
-      ctx.font='bold 16px system-ui'; ctx.textAlign='center';
+    for(let i=S.pops.length-1;i>=0;i--){
+      const p=S.pops[i]; p.up+=0.8; p.a-=0.02;
+      if(p.a<=0){ S.pops.splice(i,1); continue; }
+      ctx.globalAlpha = Math.max(0,p.a);
+      ctx.fillStyle = p.clr; ctx.font='bold 16px system-ui'; ctx.textAlign='center';
       ctx.fillText(p.text, p.x, p.y - p.up);
-      ctx.globalAlpha=1;
-      if(p.a<=0){ S.particles.splice(i,1); }
+      ctx.globalAlpha = 1;
     }
   }
 
-  function drawTP(tp){
-    const {x,y,w,h}=tp, r=18;
-    // base roll
-    ctx.save(); ctx.translate(x,y);
-    ctx.fillStyle='#f1f4f8'; ctx.strokeStyle='rgba(0,0,0,.25)'; ctx.lineWidth=2;
-    ctx.beginPath(); ctx.roundRect(-w/2,-h/2,w,h,18); ctx.fill(); ctx.stroke();
-    // center hole
-    ctx.fillStyle='#b8894d'; ctx.beginPath(); ctx.ellipse(-w*0.35,0,14,14,0,0,Math.PI*2); ctx.fill();
-    // logo strip
-    ctx.fillStyle='rgba(30,78,137,.75)'; ctx.font='900 18px system-ui'; ctx.textAlign='center'; ctx.fillText('WIPE',0,6);
-    ctx.restore();
-  }
-  function drawCoin(c){
-    ctx.save(); ctx.translate(c.x,c.y); ctx.rotate(c.rot);
-    if (c.type==='diamond'){
-      if(IM.coinD){ const d= c.r*2.4; ctx.drawImage(IM.coinD,-d/2,-d/2,d,d); }
-      else { ctx.fillStyle='#b6f0ff'; ctx.beginPath(); ctx.moveTo(0,-c.r); ctx.lineTo(c.r*0.9,0); ctx.lineTo(0,c.r); ctx.lineTo(-c.r*0.9,0); ctx.closePath(); ctx.fill(); }
-    } else {
-      if(IM.coinG){ const d= c.r*2.4; ctx.drawImage(IM.coinG,-d/2,-d/2,d,d); }
-      else { const grad = ctx.createRadialGradient(-5,-5,4,0,0,c.r+6); grad.addColorStop(0,'#fff5b2'); grad.addColorStop(1,'#F6C445');
-        ctx.fillStyle = grad; ctx.strokeStyle = '#b98513'; ctx.lineWidth=3; ctx.beginPath(); ctx.arc(0,0,c.r,0,Math.PI*2); ctx.fill(); ctx.stroke(); }
-    }
-    ctx.restore();
+  /* collision with bigger mobile padding */
+  const CATCH_PAD = 10;
+  function collide(c,tp){
+    const cx = clamp(c.x, tp.x-tp.w/2-CATCH_PAD, tp.x+tp.w/2+CATCH_PAD);
+    const cy = clamp(c.y, tp.y-tp.h/2-CATCH_PAD, tp.y+tp.h/2+CATCH_PAD);
+    const dx = c.x-cx, dy = c.y-cy;
+    return dx*dx + dy*dy <= c.r*c.r;
   }
 
-  // ------- loop -------
-  let last=0;
-  function loop(t){
-    if (!S.running) return;
-    const dt = Math.min(32, t-last)/1000; last=t;
-    S.time += dt; S.spawnTimer += dt*1000;
-    S.speed += dt*6; S.spawnRate = Math.max(260, S.spawnRate - dt*8);
-    if (S.spawnTimer > S.spawnRate){ S.spawnTimer = 0; spawn(); }
-    if (keys['ArrowLeft']||keys['a']) S.tp.x -= 420*dt;
-    if (keys['ArrowRight']||keys['d']) S.tp.x += 420*dt;
-    S.tp.x = clamp(S.tp.x, S.tp.w/2, innerWidth - S.tp.w/2);
-
-    // update coins
-    for (let i=S.coins.length-1;i>=0;i--){
-      const c = S.coins[i];
-      c.y += c.v*dt; c.rot += (c.type==='diamond'?2.2:1.4)*dt;
-      if (collide(c,S.tp)){
-        const gained=(c.type==='diamond'?100:10) * S.combo; S.score+=gained; S.combo=Math.min(10,S.combo+1);
-        popup(c.x,c.y, c.type==='diamond'?'+100':'+10', c.type==='diamond'?'#bde0ff':'#ffda7b');
-        spark(c.x,c.y, c.type==='diamond'); if (soundOn) beep(c.type==='diamond'?1040:820,70); S.coins.splice(i,1);
-      }
-      else if (c.y - c.r > innerHeight){
-        S.lives -= 1; S.combo=1; if (soundOn) beep(220,120); S.coins.splice(i,1); if (S.lives<=0) over();
-      }
-    }
-
-    // draw bg (viral poster)
-    coverDraw(IM.bg,0,0,innerWidth,innerHeight);
-    // small dark footer line
-    ctx.fillStyle='rgba(0,0,0,.15)'; ctx.fillRect(0, innerHeight-6, innerWidth, 6);
-
-    // draw coins/TP/FX
-    S.coins.forEach(drawCoin);
-    drawParticles(); drawPopups();
-    S.tp.y = innerHeight - 90; drawTP(S.tp);
-
-    // update HUD text
+  function updateHUD(){
     $score.textContent = `Score: ${S.score}`;
     $combo.textContent = `Combo: x${S.combo}`;
     $lives.textContent = `Lives: ${S.lives}`;
+  }
+
+  /* ----------------- main loop ----------------- */
+  let last=0;
+  function loop(t){
+    if(!S.running) return;
+    const dt = Math.min(32, t-last)/1000; last=t;
+
+    // bg
+    if(IMGS.bg){ ctx.drawImage(IMGS.bg, 0, 0, innerWidth, innerHeight); }
+    else{
+      ctx.fillStyle='#0b1e3a'; ctx.fillRect(0,0,innerWidth,innerHeight);
+    }
+
+    // TP control
+    if(keys['ArrowLeft']||keys['a'])  S.tp.x -= 420*dt;
+    if(keys['ArrowRight']||keys['d']) S.tp.x += 420*dt;
+    S.tp.x = clamp(S.tp.x, S.tp.w/2, innerWidth - S.tp.w/2);
+
+    // difficulty
+    S.speed     += dt*6;
+    S.spawnRate  = Math.max(260, S.spawnRate - dt*8);
+    S.spawnTimer += dt*1000;
+    if(S.spawnTimer > S.spawnRate){ S.spawnTimer = 0; spawnCoin(); }
+
+    // coins
+    for(let i=S.coins.length-1;i>=0;i--){
+      const c=S.coins[i];
+      c.y += c.v*dt; c.rot += (c.type==='diamond'?2.1:1.4)*dt;
+
+      if(collide(c,S.tp)){
+        const gained = (c.type==='diamond'?100:10)*S.combo;
+        S.score += gained; S.combo = Math.min(10, S.combo+1);
+        popup(c.x, c.y-16, `+${gained}`, c.type==='diamond'? '#7fd1ff':'#ffe08a');
+        spawnSpark(c.x, c.y, c.type==='diamond'? '#7fd1ff':'#ffd76a');
+        beep(c.type==='diamond'?1040:820,70);
+        S.coins.splice(i,1);
+      }else if(c.y - c.r > innerHeight){
+        S.lives--; S.combo=1; popup(c.x, c.y, 'miss', '#ff9aa2'); beep(220,120);
+        S.coins.splice(i,1); if(S.lives<=0) { updateHUD(); endGame(); return; }
+      }
+    }
+
+    // draw everything
+    for(const c of S.coins) drawCoin(c);
+    drawTP(S.tp);
+    drawParticles();
+    drawPopups();
+    updateHUD();
 
     requestAnimationFrame(loop);
   }
-
-  // ------- Top Degens (local + optional backend) -------
-  const LS_NAME='wipe_name';
-  $setName.value = localStorage.getItem(LS_NAME)||'';
-  $saveName.onclick = ()=>{ localStorage.setItem(LS_NAME,$setName.value.trim()); fetchTopDegens(); };
-
-  async function fetchTopDegens(){
-    try{
-      const r = await fetch('/api/scores'); if(!r.ok) throw 0;
-      const {top=[]} = await r.json();
-      renderDegens(top);
-    }catch{
-      // fallback to local-only view
-      const mine = JSON.parse(localStorage.getItem('wipe_top')||'[]').slice(0,10);
-      renderDegens(mine);
-    }
-  }
-  function renderDegens(top){
-    if(!top.length){ $list.textContent='be the first 💩'; return; }
-    $list.innerHTML = top.slice(0,8).map((s,i)=>`<span>#${i+1} ${escapeHtml(s.name||'anon')} <b>${s.score}</b></span>`).join(' • ');
-  }
-  function escapeHtml(s){ return s.replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' }[m])); }
-
-  addEventListener('wipe:gameover', async (e)=>{
-    const name = (localStorage.getItem(LS_NAME)||'anon').trim().slice(0,22)||'anon';
-    const payload = { name, score: e.detail.score|0, ts: Date.now() };
-    // optimistic local list
-    const mine = JSON.parse(localStorage.getItem('wipe_top')||'[]'); mine.push(payload);
-    mine.sort((a,b)=>b.score-a.score); localStorage.setItem('wipe_top', JSON.stringify(mine.slice(0,20)));
-    fetchTopDegens(); // refresh view
-    // try backend
-    try{ await fetch('/api/scores',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(payload)}); fetchTopDegens(); }catch{}
-  });
-
-  fetchTopDegens();
 })();
 </script>
 </body>
