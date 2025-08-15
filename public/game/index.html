@@ -1,96 +1,95 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>WIPE: Catch the Gains</title>
-  <meta name="description" content="WIPE mini-game — catch the coins, flex your score.">
-  <link rel="icon" href="assets/favicon.png" type="image/png"/>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>WIPE: Catch the Gains</title>
+<link rel="icon" href="assets/favicon.png" type="image/png"/>
 
-  <style>
-    :root{
-      --bg:#0E2341; --tile:#122b52; --accent:#1E4E89;
-      --gold:#F6C445; --gold-dark:#b98513; --text:#F7F7F7;
-      --panel:#0e2341f0; --stroke:#ffffff1f;
-    }
-    *{ box-sizing:border-box }
-    html,body{ margin:0; height:100%; background:#000; color:var(--text);
-      font-family: system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial; }
+<style>
+  :root{
+    --bg:#0E2341; --tile:#122b52; --accent:#1E4E89;
+    --gold:#F6C445; --gold-dark:#b98513; --text:#F7F7F7;
+    --panel:#0e2341f0; --stroke:#ffffff1f;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:#000;color:var(--text);
+    font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial}
+  #game{display:block;width:100vw;height:100vh}
 
-    /* Canvas full screen */
-    #game { display:block; width:100vw; height:100vh; }
+  /* HUD */
+  #hud{position:fixed;left:10px;top:8px;display:flex;gap:12px;align-items:center;
+    font-weight:800;text-shadow:0 2px 6px rgba(0,0,0,.45)}
+  .brand{display:inline-flex;align-items:center;gap:8px;padding:4px 10px;border-radius:999px;
+    background:rgba(30,78,137,.28);border:1px solid var(--stroke)}
+  .brand img{width:18px;height:18px;border-radius:50%}
+  #hint{position:fixed;right:10px;top:10px;opacity:.75;font-weight:700}
 
-    /* HUD */
-    #hud{ position:fixed; left:10px; top:8px; display:flex; gap:12px;
-      align-items:center; font-weight:800; text-shadow:0 2px 6px rgba(0,0,0,.45); }
-    .brand{ display:inline-flex; align-items:center; gap:8px;
-      padding:4px 10px; border-radius:999px; background:rgba(30,78,137,.28);
-      border:1px solid var(--stroke); }
-    .brand img{ width:18px; height:18px; border-radius:50%; }
-    #hint{ position:fixed; right:10px; top:10px; opacity:.75; font-weight:700 }
+  /* Panels */
+  .center{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
+  .panel{width:min(720px,92vw);pointer-events:auto;border-radius:18px;background:var(--panel);
+    border:1px solid var(--stroke);padding:16px 16px 20px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+  .start-art{width:100%;height:220px;border-radius:12px;margin-bottom:12px;background:#0e243d}
+  .start-art.fallback{
+    background:
+      radial-gradient(900px 420px at 50% -10%, #1c396b 0%, #0e2341 60%),
+      repeating-linear-gradient(0deg, #122b52, #122b52 28px, #0e2341 28px, #0e2341 56px);
+    position:relative; overflow:hidden;
+  }
+  .start-art.fallback:after{
+    content:""; position:absolute; right:14px; top:14px; width:86px; height:86px; border-radius:50%;
+    box-shadow:0 8px 18px rgba(0,0,0,.3);
+    background:
+      radial-gradient(circle at 35% 35%, #fff6c8 0%, #ffd768 30%, #f5c23f 65%, #ad7f15 100%);
+  }
 
-    /* Center panels */
-    .center{ position:fixed; inset:0; display:flex; align-items:center; justify-content:center; }
-    .panel{ width:min(720px,92vw); pointer-events:auto; border-radius:18px;
-      background:var(--panel); border:1px solid var(--stroke); padding:16px 16px 20px;
-      box-shadow:0 20px 60px rgba(0,0,0,.5); }
-    .panel .start-art{ width:100%; height:220px; border-radius:12px;
-      background:url("assets/start-panel.png") center/cover no-repeat; margin-bottom:12px; }
-    .title{ font-size:clamp(20px,4vw,28px); font-weight:900; margin:6px 0 10px }
-    .actions{ display:flex; flex-wrap:wrap; gap:10px; margin-top:12px }
-    button{ cursor:pointer; border:0; border-radius:12px; padding:12px 18px; font-weight:900 }
-    .primary{ background:var(--accent); color:#061b2c }
-    .ghost{ background:transparent; color:var(--text); border:1px solid var(--stroke) }
-    .credits{ position:fixed; right:10px; bottom:8px; font-size:12px; opacity:.7 }
+  .title{font-size:clamp(20px,4vw,28px);font-weight:900;margin:6px 0 10px}
+  .actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+  button{cursor:pointer;border:0;border-radius:12px;padding:12px 18px;font-weight:900}
+  .primary{background:var(--accent);color:#061b2c}
+  .ghost{background:transparent;color:var(--text);border:1px solid var(--stroke)}
+  .credits{position:fixed;right:10px;bottom:8px;font-size:12px;opacity:.7}
 
-    /* Leaderboard mount (CSS file already in repo) */
-    #wipe-leader{ position:fixed; left:12px; bottom:12px; width:min(380px,90vw); }
+  /* Leaderboard mount (CSS present) */
+  #wipe-leader{position:fixed;left:12px;bottom:12px;width:min(380px,90vw)}
 
-    /* Popups */
-    .popup{
-      position:fixed; color:#fff; font-weight:900;
-      text-shadow:0 2px 8px rgba(0,0,0,.7); pointer-events:none;
-      animation: pop 800ms ease-out forwards;
-    }
-    @keyframes pop{
-      from{ transform:translate(-50%,-10px) scale(.9); opacity:0 }
-      20%{ opacity:1 }
-      to{ transform:translate(-50%,-60px) scale(1.05); opacity:0 }
-    }
+  /* FX */
+  .popup{position:fixed;color:#fff;font-weight:900;pointer-events:none;
+    text-shadow:0 2px 8px rgba(0,0,0,.7); animation:pop .8s ease-out forwards}
+  @keyframes pop{from{transform:translate(-50%,-10px) scale(.9);opacity:0}
+    20%{opacity:1} to{transform:translate(-50%,-60px) scale(1.05);opacity:0}}
 
-    /* Sparkles */
-    .sparkle{
-      position:fixed; width:6px; height:6px; border-radius:50%;
-      background:radial-gradient(circle,#fff 0%, #ffe07a 40%, transparent 70%);
-      filter: blur(.2px); pointer-events:none; opacity:.9;
-      animation: sp 700ms linear forwards;
-    }
-    @keyframes sp{
-      from{ transform:translate(-50%,-50%) scale(1); opacity:1 }
-      to{ transform:translate(-50%,-90%) scale(.6); opacity:0 }
-    }
-  </style>
+  .sparkle{position:fixed;width:6px;height:6px;border-radius:50%;
+    background:radial-gradient(circle,#fff 0%, #ffe07a 40%, transparent 70%);
+    filter:blur(.2px);pointer-events:none;opacity:.9;animation:sp .7s linear forwards}
+  @keyframes sp{from{transform:translate(-50%,-50%) scale(1);opacity:1}
+    to{transform:translate(-50%,-90%) scale(.6);opacity:0}}
+</style>
 
-  <link rel="stylesheet" href="js/leaderboard.css">
+<link rel="stylesheet" href="js/leaderboard.css">
+<link rel="preload" as="image" href="assets/background.png">
+<link rel="preload" as="image" href="assets/backdrop.png">
+<link rel="preload" as="image" href="assets/start-panel.png">
+<link rel="preload" as="image" href="assets/diamond background.png">
+<link rel="preload" as="image" href="assets/tp-roll.png">
+<link rel="preload" as="image" href="assets/coin_gold.png">
+<link rel="preload" as="image" href="assets/coin_diamond.png">
 </head>
 <body>
   <canvas id="game"></canvas>
 
-  <div id="hud" aria-live="polite">
-    <span class="brand">
-      <img src="assets/logo.png" alt="">
-      <b>WIPE</b>
-    </span>
+  <div id="hud">
+    <span class="brand"><img src="assets/logo.png" alt=""><b>WIPE</b></span>
     <span id="hScore">Score: 0</span>
     <span id="hCombo">Combo: x1</span>
     <span id="hLives">Lives: 3</span>
   </div>
   <div id="hint">Drag / Touch or ← →</div>
 
-  <!-- Start panel -->
+  <!-- Start -->
   <div id="startWrap" class="center">
     <div class="panel">
-      <div class="start-art" role="img" aria-label="WIPE start art"></div>
+      <div id="startArt" class="start-art fallback" aria-label="WIPE start art"></div>
       <div class="title">WIPE: Catch the Gains 💎</div>
       <div>Move the TP roll to <b>catch coins</b>. Miss 3 and it’s <i>game over</i>.</div>
       <div class="actions">
@@ -100,7 +99,7 @@
     </div>
   </div>
 
-  <!-- Game Over -->
+  <!-- Game over -->
   <div id="overWrap" class="center" style="display:none;">
     <div class="panel">
       <div class="title">Flushed… 💀</div>
@@ -115,214 +114,235 @@
   <div id="wipe-leader"></div>
   <div class="credits">WIPE mini-game</div>
 
-  <!-- Preload required images (all live in /game/assets/) -->
-  <link rel="preload" as="image" href="assets/background.png">
-  <link rel="preload" as="image" href="assets/tp-roll.png">
-  <link rel="preload" as="image" href="assets/coin_gold.png">
-  <link rel="preload" as="image" href="assets/coin_diamond.png">
-  <link rel="preload" as="image" href="assets/start-panel.png">
+<script>
+(function(){
+  // ---------- Helper: try multiple filenames, resolve first that loads ----------
+  function loadFirst(paths){
+    return new Promise(resolve=>{
+      let i=0, el = new Image(), done=false;
+      const tryNext = ()=>{
+        if(i>=paths.length){ resolve({img:null, ok:false}); return; }
+        el = new Image();
+        el.onload = ()=>{ if(!done){ done=true; resolve({img:el, ok:true, src:paths[i]}); } };
+        el.onerror = ()=>{ i++; tryNext(); };
+        el.src = paths[i];
+      };
+      tryNext();
+    });
+  }
 
-  <script>
-  (function(){
-    // ---- DOM
-    const canvas = document.getElementById('game');
-    const ctx = canvas.getContext('2d');
-    const $hScore = document.getElementById('hScore');
-    const $hCombo = document.getElementById('hCombo');
-    const $hLives = document.getElementById('hLives');
-    const $startWrap = document.getElementById('startWrap');
-    const $btnStart = document.getElementById('btnStart');
-    const $btnSound = document.getElementById('btnSound');
-    const $overWrap = document.getElementById('overWrap');
-    const $overText = document.getElementById('overText');
-    const $btnAgain = document.getElementById('btnAgain');
-    const $btnShare = document.getElementById('btnShare');
+  // ---------- DOM ----------
+  const canvas = document.getElementById('game');
+  const ctx = canvas.getContext('2d');
+  const $hScore = document.getElementById('hScore');
+  const $hCombo = document.getElementById('hCombo');
+  const $hLives = document.getElementById('hLives');
+  const $startWrap = document.getElementById('startWrap');
+  const $startArt = document.getElementById('startArt');
+  const $btnStart = document.getElementById('btnStart');
+  const $btnSound = document.getElementById('btnSound');
+  const $overWrap = document.getElementById('overWrap');
+  const $overText = document.getElementById('overText');
+  const $btnAgain = document.getElementById('btnAgain');
+  const $btnShare = document.getElementById('btnShare');
 
-    // ---- State
-    const S = {
-      running:false, over:false,
-      score:0, best:0, combo:1, lives:3,
-      speed:220, spawn:800, timer:0,
-      coins:[], tp:{x:0,y:0,w:180,h:60},
-      bg:null, tpImg:null, gImg:null, dImg:null,
-      sound:false,
-    };
+  // ---------- State ----------
+  const S = {
+    running:false, over:false,
+    score:0, best:0, combo:1, lives:3,
+    speed:220, spawn:800, timer:0,
+    coins:[], tp:{x:0,y:0,w:180,h:60},
+    sound:false,
+    // assets (images or null for vector fallback)
+    bg:null, tpImg:null, gImg:null, dImg:null,
+  };
 
-    // ---- Images
-    const img = (src)=>{ const i=new Image(); i.src=src; return i; }
-    S.bg    = img('assets/background.png');
-    S.tpImg = img('assets/tp-roll.png');
-    S.gImg  = img('assets/coin_gold.png');
-    S.dImg  = img('assets/coin_diamond.png');
+  // ---------- Utilities ----------
+  const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+  const rand =(a,b)=>Math.random()*(b-a)+a;
 
-    // ---- Helpers
-    const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
-    const rand =(a,b)=>Math.random()*(b-a)+a;
+  function resize(){ canvas.width=innerWidth; canvas.height=innerHeight; S.tp.x=canvas.width*0.5; S.tp.y=canvas.height-90; }
+  addEventListener('resize', resize, {passive:true}); resize();
 
-    function resize(){
-      canvas.width = innerWidth; canvas.height = innerHeight;
-      S.tp.x = canvas.width * 0.5; S.tp.y = canvas.height - 90;
+  // ---------- Sound ----------
+  let audio=null;
+  function beep(freq=880,ms=70,g=0.06){
+    if(!S.sound) return;
+    try{
+      audio = audio || new (window.AudioContext || window.webkitAudioContext)();
+      const t=audio.currentTime, o=audio.createOscillator(), v=audio.createGain();
+      o.type='square'; o.frequency.value=freq; v.gain.value=g; o.connect(v); v.connect(audio.destination);
+      o.start(t); v.gain.exponentialRampToValueAtTime(0.0001, t + ms/1000); o.stop(t + ms/1000 + .01);
+    }catch{}
+  }
+  $btnSound.onclick = ()=>{ S.sound=!S.sound; $btnSound.textContent='Sound: '+(S.sound?'On':'Off'); if(S.sound) beep(660,60,.03); };
+
+  // ---------- Input ----------
+  let dragging=false, offsetX=0, keys={};
+  canvas.addEventListener('pointerdown', e=>{ dragging=true; offsetX=clamp(e.clientX-S.tp.x, -S.tp.w/2, S.tp.w/2); });
+  addEventListener('pointerup', ()=> dragging=false);
+  addEventListener('pointermove', e=>{ if(dragging) S.tp.x = clamp(e.clientX-offsetX, S.tp.w/2, canvas.width-S.tp.w/2); });
+  addEventListener('keydown', e=> keys[e.key]=true);
+  addEventListener('keyup',   e=> keys[e.key]=false);
+
+  // ---------- FX ----------
+  function sparkle(x,y){
+    for(let i=0;i<8;i++){
+      const s=document.createElement('div'); s.className='sparkle';
+      s.style.left=(x+rand(-12,12))+'px'; s.style.top=(y+rand(-10,10))+'px';
+      document.body.appendChild(s); setTimeout(()=>s.remove(),700);
     }
-    addEventListener('resize', resize, {passive:true}); resize();
+  }
+  function popup(text,x,y,color){
+    const p=document.createElement('div'); p.className='popup'; p.textContent=text;
+    p.style.left=x+'px'; p.style.top=y+'px'; p.style.color=color;
+    document.body.appendChild(p); setTimeout(()=>p.remove(),800);
+  }
+  function shake(ms=120,px=6){
+    const t=Date.now(); const id=setInterval(()=>{
+      const e=Date.now()-t, dx=(Math.random()*2-1)*px, dy=(Math.random()*2-1)*px;
+      canvas.style.transform=`translate(${dx}px,${dy}px)`;
+      if(e>ms){ clearInterval(id); canvas.style.transform=''; }
+    },16);
+  }
 
-    // ---- Sound
-    let audio=null;
-    function beep(f=880,ms=70,g=0.06){
-      if(!S.sound) return;
-      try{
-        audio = audio || new (window.AudioContext || window.webkitAudioContext)();
-        const t = audio.currentTime, o = audio.createOscillator(), v = audio.createGain();
-        o.type = 'square'; o.frequency.value=f; v.gain.value=g; o.connect(v); v.connect(audio.destination);
-        o.start(t); v.gain.exponentialRampToValueAtTime(0.0001, t + ms/1000); o.stop(t + ms/1000 + .01);
-      }catch{}
-    }
-    $btnSound.onclick = ()=>{ S.sound=!S.sound; $btnSound.textContent = 'Sound: '+(S.sound?'On':'Off'); if(S.sound) beep(660,60,.03); }
+  // ---------- Coins ----------
+  function spawn(){
+    const diamond = Math.random()<0.12;
+    S.coins.push({ x:rand(36, canvas.width-36), y:-36, r:diamond?26:22,
+      type:diamond?'diamond':'gold', v:S.speed*(diamond?0.96:1), rot:rand(0,Math.PI*2) });
+  }
+  function collide(c,tp){
+    const cx=clamp(c.x,tp.x-tp.w/2,tp.x+tp.w/2), cy=clamp(c.y,tp.y-tp.h/2,tp.y+tp.h/2);
+    const dx=c.x-cx, dy=c.y-cy; return dx*dx+dy*dy <= c.r*c.r;
+  }
 
-    // ---- Input
-    let dragging=false, offsetX=0, keys={};
-    canvas.addEventListener('pointerdown', e=>{ dragging=true; offsetX = clamp(e.clientX - S.tp.x, -S.tp.w/2, S.tp.w/2); });
-    addEventListener('pointerup', ()=> dragging=false);
-    addEventListener('pointermove', e=>{ if(dragging){ S.tp.x = clamp(e.clientX - offsetX, S.tp.w/2, canvas.width - S.tp.w/2); }});
-    addEventListener('keydown', e=> keys[e.key]=true);
-    addEventListener('keyup',   e=> keys[e.key]=false);
-
-    // ---- Particles & popups
-    function sparkle(x,y){
-      for(let i=0;i<8;i++){
-        const s = document.createElement('div');
-        s.className='sparkle';
-        s.style.left = (x + rand(-12,12))+'px';
-        s.style.top  = (y + rand(-10,10))+'px';
-        document.body.appendChild(s);
-        setTimeout(()=>s.remove(), 700);
-      }
-    }
-    function popup(text,x,y,color){
-      const p = document.createElement('div');
-      p.className='popup'; p.textContent=text;
-      p.style.left=x+'px'; p.style.top=y+'px';
-      p.style.color=color;
-      document.body.appendChild(p);
-      setTimeout(()=>p.remove(), 800);
-    }
-    function shake(ms=120, px=6){
-      const t=Date.now(); const id=setInterval(()=>{
-        const e=Date.now()-t; const dx=(Math.random()*2-1)*px, dy=(Math.random()*2-1)*px;
-        canvas.style.transform=`translate(${dx}px,${dy}px)`; if(e>ms){ clearInterval(id); canvas.style.transform=''; }
-      }, 16);
-    }
-
-    // ---- Coins
-    function spawn(){
-      const diamond = Math.random() < 0.12;
-      S.coins.push({
-        x: rand(36, canvas.width-36),
-        y: -36,
-        r: diamond? 26: 22,
-        type: diamond? 'diamond':'gold',
-        v: S.speed * (diamond? 0.96:1),
-        rot: rand(0, Math.PI*2)
-      });
-    }
-    function collide(c,tp){
-      const cx=clamp(c.x, tp.x-tp.w/2, tp.x+tp.w/2);
-      const cy=clamp(c.y, tp.y-tp.h/2, tp.y+tp.h/2);
-      const dx=c.x-cx, dy=c.y-cy; return dx*dx+dy*dy <= c.r*c.r;
-    }
-
-    // ---- Drawers
-    function drawBG(){
-      // Cover
+  // ---------- Draw helpers (with fallbacks) ----------
+  function drawBG(){
+    if(S.bg){ // image cover
       const iw=S.bg.width, ih=S.bg.height, cw=canvas.width, ch=canvas.height, ir=iw/ih, cr=cw/ch;
-      let dw, dh, dx=0, dy=0;
-      if(cr>ir){ dw=cw; dh=cw/ir; dy=(ch-dh)/2; } else { dh=ch; dw=ch*ir; dx=(cw-dw)/2; }
-      ctx.drawImage(S.bg, dx, dy, dw, dh);
+      let dw,dh,dx=0,dy=0; if(cr>ir){ dw=cw; dh=cw/ir; dy=(ch-dh)/2; } else { dh=ch; dw=ch*ir; dx=(cw-dw)/2; }
+      ctx.drawImage(S.bg,dx,dy,dw,dh);
+    } else {
+      // vector background
+      ctx.fillStyle='#0e2341'; ctx.fillRect(0,0,canvas.width,canvas.height);
+      const g=ctx.createRadialGradient(canvas.width/2,-80,100, canvas.width/2,-80,900);
+      g.addColorStop(0,'#1c396b'); g.addColorStop(1,'#0e2341'); ctx.globalAlpha=.9; ctx.fillStyle=g; ctx.fillRect(0,0,canvas.width,canvas.height); ctx.globalAlpha=1;
+      ctx.globalAlpha=.25; ctx.fillStyle='#122b52';
+      for(let y=0;y<canvas.height;y+=56) ctx.fillRect(0,y,canvas.width,28);
+      ctx.globalAlpha=1;
     }
-    function drawTP(){
-      const {x,y,w,h}=S.tp; ctx.save(); ctx.translate(x,y);
-      ctx.drawImage(S.tpImg, -w/2, -h/2, w, h);
-      ctx.restore();
+  }
+  function drawTP(){
+    const {x,y,w,h}=S.tp; ctx.save(); ctx.translate(x,y);
+    if(S.tpImg){ ctx.drawImage(S.tpImg, -w/2, -h/2, w, h); }
+    else{
+      // vector TP roll
+      const r=18; ctx.fillStyle='#f1f4f8'; ctx.strokeStyle='rgba(0,0,0,.25)'; ctx.lineWidth=2;
+      roundRect(ctx,-w/2,-h/2,w,h,r,true,true);
+      ctx.fillStyle='#b8894d'; ctx.beginPath(); ctx.ellipse(-w*0.35,0,14,14,0,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle='rgba(30,78,137,.7)'; ctx.font='900 18px system-ui'; ctx.textAlign='center'; ctx.fillText('WIPE',0,6);
     }
-    function drawCoin(c){
-      ctx.save(); ctx.translate(c.x,c.y); ctx.rotate(c.rot);
-      const img = c.type==='diamond' ? S.dImg : S.gImg;
-      const s = c.r*2.2; ctx.drawImage(img, -s/2, -s/2, s, s);
-      ctx.restore();
-    }
+    ctx.restore();
+  }
+  function roundRect(ctx,x,y,w,h,r,fill,stroke){
+    if(r>h/2) r=h/2; if(r>w/2) r=w/2;
+    ctx.beginPath(); ctx.moveTo(x+r,y);
+    ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r);
+    ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); if(fill) ctx.fill(); if(stroke) ctx.stroke();
+  }
 
-    // ---- Game control
-    function reset(){
-      S.score=0; S.combo=1; S.lives=3; S.coins.length=0; S.timer=0; S.speed=220; S.spawn=800;
-      $hScore.textContent='Score: 0'; $hCombo.textContent='Combo: x1'; $hLives.textContent='Lives: 3';
-    }
-    function start(){
-      reset(); S.running=true; S.over=false; $startWrap.style.display='none'; $overWrap.style.display='none';
-      last=performance.now(); requestAnimationFrame(loop);
-    }
-    function over(){
-      S.running=false; S.over=true; S.best = Math.max(S.best, S.score);
-      $overText.textContent = `Score: ${S.score} • Best: ${S.best}`;
-      $overWrap.style.display='flex';
-    }
-
-    $btnStart.onclick = start;
-    $btnAgain.onclick = start;
-    $btnShare.onclick = ()=>{
-      const u = new URL('https://twitter.com/intent/tweet');
-      u.searchParams.set('text', `I scored ${S.score} in WIPE — can you beat me? #WIPEcoin`);
-      u.searchParams.set('url', location.href); window.open(u, '_blank');
-    };
-
-    // ---- Loop
-    let last=0;
-    function loop(t){
-      if(!S.running) return;
-      const dt = Math.min(32, t-last)/1000; last=t;
-
-      // Move TP
-      if(keys['ArrowLeft']||keys['a'])  S.tp.x -= 420*dt;
-      if(keys['ArrowRight']||keys['d']) S.tp.x += 420*dt;
-      S.tp.x = clamp(S.tp.x, S.tp.w/2, canvas.width - S.tp.w/2);
-
-      // Spawn
-      S.timer += dt*1000; S.speed += dt*7; S.spawn = Math.max(250, S.spawn - dt*8);
-      if(S.timer > S.spawn){ S.timer=0; spawn(); }
-
-      // Coins
-      for(let i=S.coins.length-1;i>=0;i--){
-        const c = S.coins[i];
-        c.y += c.v*dt; c.rot += (c.type==='diamond'?2.4:1.6)*dt;
-
-        if(collide(c,S.tp)){
-          const gain = (c.type==='diamond'?100:10) * S.combo;
-          S.score += gain; S.combo = Math.min(10, S.combo+1);
-          $hScore.textContent = `Score: ${S.score}`;
-          $hCombo.textContent = `Combo: x${S.combo}`;
-          if(S.sound) beep(c.type==='diamond'?1040:820,70);
-          popup('+'+gain, S.tp.x, S.tp.y-40, c.type==='diamond'?'#8fe9ff':'#ffe28a');
-          if(c.type==='diamond'){ sparkle(S.tp.x, S.tp.y-30); }
-          S.coins.splice(i,1);
-        } else if (c.y - c.r > canvas.height){
-          S.lives -= 1; S.combo = 1; $hLives.textContent = `Lives: ${S.lives}`;
-          if(S.sound) beep(220,120);
-          shake();
-          S.coins.splice(i,1);
-          if(S.lives<=0) { over(); }
-        }
+  function drawCoin(c){
+    ctx.save(); ctx.translate(c.x,c.y); ctx.rotate(c.rot);
+    if(c.type==='diamond'){
+      if(S.dImg){ const s=c.r*2.2; ctx.drawImage(S.dImg,-s/2,-s/2,s,s); }
+      else{
+        // vector diamond coin
+        const R=c.r*1.4;
+        const grad=ctx.createRadialGradient(-4,-4,4,0,0,R+6);
+        grad.addColorStop(0,'#bfeeff'); grad.addColorStop(1,'#4aa8d9');
+        ctx.fillStyle=grad; ctx.strokeStyle='#2f6c8f'; ctx.lineWidth=3;
+        ctx.beginPath(); ctx.arc(0,0,R,0,Math.PI*2); ctx.fill(); ctx.stroke();
+        ctx.fillStyle='#ffffff'; ctx.beginPath();
+        ctx.moveTo(0,-R*0.55); ctx.lineTo(R*0.55,0); ctx.lineTo(0,R*0.55); ctx.lineTo(-R*0.55,0); ctx.closePath(); ctx.fill();
       }
+    } else {
+      if(S.gImg){ const s=c.r*2.2; ctx.drawImage(S.gImg,-s/2,-s/2,s,s); }
+      else{
+        const R=c.r*1.4, grad=ctx.createRadialGradient(-5,-5,4,0,0,R+6);
+        grad.addColorStop(0,'#fff5b2'); grad.addColorStop(1,'#f6c445');
+        ctx.fillStyle=grad; ctx.strokeStyle='#b98513'; ctx.lineWidth=3;
+        ctx.beginPath(); ctx.arc(0,0,R,0,Math.PI*2); ctx.fill(); ctx.stroke();
+        ctx.fillStyle='#7f5a0a'; ctx.font=`bold ${Math.round(R)}px system-ui`; ctx.textAlign='center'; ctx.fillText('$',0,R*0.35);
+      }
+    }
+    ctx.restore();
+  }
 
-      // Draw
-      ctx.clearRect(0,0,canvas.width,canvas.height);
-      drawBG();
-      S.coins.forEach(drawCoin);
-      drawTP();
+  // ---------- Game control ----------
+  function reset(){
+    S.score=0; S.combo=1; S.lives=3; S.coins.length=0; S.timer=0; S.speed=220; S.spawn=800;
+    $hScore.textContent='Score: 0'; $hCombo.textContent='Combo: x1'; $hLives.textContent='Lives: 3';
+  }
+  function start(){ reset(); S.running=true; S.over=false; $startWrap.style.display='none'; $overWrap.style.display='none'; last=performance.now(); requestAnimationFrame(loop); }
+  function over(){ S.running=false; S.over=true; S.best=Math.max(S.best,S.score); $overText.textContent=`Score: ${S.score} • Best: ${S.best}`; $overWrap.style.display='flex'; }
+  $btnStart.onclick=start; $btnAgain.onclick=start;
+  $btnShare.onclick=()=>{ const u=new URL('https://twitter.com/intent/tweet'); u.searchParams.set('text',`I scored ${S.score} in WIPE — can you beat me? #WIPEcoin`); u.searchParams.set('url',location.href); window.open(u,'_blank'); };
 
-      requestAnimationFrame(loop);
+  // ---------- Loop ----------
+  let last=0;
+  function loop(t){
+    if(!S.running) return;
+    const dt=Math.min(32,t-last)/1000; last=t;
+
+    if(keys['ArrowLeft']||keys['a'])  S.tp.x -= 420*dt;
+    if(keys['ArrowRight']||keys['d']) S.tp.x += 420*dt;
+    S.tp.x = clamp(S.tp.x,S.tp.w/2,canvas.width-S.tp.w/2);
+
+    S.timer += dt*1000; S.speed += dt*7; S.spawn = Math.max(250, S.spawn - dt*8);
+    if(S.timer > S.spawn){ S.timer=0; spawn(); }
+
+    for(let i=S.coins.length-1;i>=0;i--){
+      const c=S.coins[i]; c.y += c.v*dt; c.rot += (c.type==='diamond'?2.4:1.6)*dt;
+      if(collide(c,S.tp)){
+        const gain=(c.type==='diamond'?100:10)*S.combo;
+        S.score+=gain; S.combo=Math.min(10,S.combo+1);
+        $hScore.textContent=`Score: ${S.score}`; $hCombo.textContent=`Combo: x${S.combo}`;
+        if(S.sound) beep(c.type==='diamond'?1040:820,70);
+        popup('+'+gain,S.tp.x,S.tp.y-40, c.type==='diamond'?'#8fe9ff':'#ffe28a');
+        if(c.type==='diamond') sparkle(S.tp.x,S.tp.y-30);
+        S.coins.splice(i,1);
+      } else if(c.y-c.r>canvas.height){
+        S.lives -= 1; S.combo=1; $hLives.textContent=`Lives: ${S.lives}`;
+        if(S.sound) beep(220,120); shake(); S.coins.splice(i,1);
+        if(S.lives<=0) over();
+      }
     }
 
-    // Boot position
-    S.tp.w = 180; S.tp.h = 60;
-  })();
-  </script>
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    drawBG(); S.coins.forEach(drawCoin); drawTP();
+    requestAnimationFrame(loop);
+  }
+
+  // ---------- Asset load (with fallbacks & start art) ----------
+  Promise.all([
+    loadFirst(['assets/background.png','assets/backdrop.png']),
+    loadFirst(['assets/start-panel.png','assets/diamond background.png']),
+    loadFirst(['assets/tp-roll.png']),
+    loadFirst(['assets/coin_gold.png']),
+    loadFirst(['assets/coin_diamond.png']),
+  ]).then(([bg, startArt, tp, gold, diamond])=>{
+    if(bg.ok) S.bg = bg.img;
+    if(tp.ok) S.tpImg = tp.img;
+    if(gold.ok) S.gImg = gold.img;
+    if(diamond.ok) S.dImg = diamond.img;
+
+    if(startArt.ok){
+      $startArt.classList.remove('fallback');
+      $startArt.style.background = `url("${startArt.src}") center/cover no-repeat`;
+    } // else the CSS fallback is already in place
+  });
+})();
+</script>
 </body>
 </html>
