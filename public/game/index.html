@@ -1,351 +1,370 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>WIPE: Catch The Gains</title>
-<meta name="description" content="WIPE mini-game — catch coins with a toilet paper roll and post your score.">
-<link rel="icon" href="../assets/favicon.png" type="image/png">
-<meta property="og:title" content="WIPE: Catch The Gains">
-<meta property="og:description" content="I scored big in WIPE — can you beat me?">
-<meta property="og:image" content="../assets/social-card.png">
-<style>
-  :root {
-    --bg:#0E2341; --tile:#122b52; --accent:#1E4E89;
-    --gold:#F6C445; --gold-dark:#b98513; --text:#F7F7F7;
-  }
-  html,body{margin:0;height:100%;background:var(--bg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial;color:var(--text);overflow:hidden}
-  canvas{display:block;width:100vw;height:100vh;background: #02172f}
-  #ui{position:fixed;inset:0;pointer-events:none}
-  .hud{position:absolute;left:12px;top:10px;font-weight:800;text-shadow:0 2px 6px rgba(0,0,0,.35);display:flex;gap:12px;align-items:center}
-  .brand{display:inline-flex;align-items:center;gap:8px;padding:4px 10px;border-radius:999px;background:rgba(30,78,137,.28);border:1px solid rgba(255,255,255,.12)}
-  .brand img{width:18px;height:18px;border-radius:50%}
-  .right{position:absolute;right:12px;top:10px;font-weight:700;opacity:.85}
-  .center{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center}
-  .panel{pointer-events:auto;background:rgba(14,35,65,.92);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:20px;max-width:640px;box-shadow:0 10px 40px rgba(0,0,0,.35)}
-  .panel h1{margin:10px 0 8px}
-  .panel p{margin:8px 0}
-  .actions{display:flex;gap:10px;justify-content:center;margin-top:10px;flex-wrap:wrap}
-  button{pointer-events:auto;cursor:pointer;border:0;border-radius:12px;padding:12px 18px;font-weight:800}
-  .primary{background:var(--accent);color:#061b2c}
-  .ghost{background:transparent;color:var(--text);border:1px solid rgba(255,255,255,.25)}
-  .muted{opacity:.8}
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>WIPE: Catch The Gains</title>
+  <meta name="description" content="WIPE mini-game — catch coins with a toilet paper roll and post your score.">
+  <link rel="icon" href="./assets/favicon.png" type="image/png">
 
-  /* Backdrop tile behind the start panel */
-  .backdrop{
-    position:relative;
-    border-radius:16px;
-    overflow:hidden;
-    min-height:200px;
-    margin-bottom:12px;
-    background:#061b2c url('assets/backdrop.png') center/cover no-repeat;
-  }
-  .backdrop .coin-overlay{
-    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
-  }
-  .backdrop .coin-overlay img{
-    width:min(42vw, 380px);
-    filter: drop-shadow(0 8px 24px rgba(246,196,69,.45));
-    transform: translateY(6px);
-  }
+  <style>
+    :root {
+      --bg:#0E2341; --tile:#122b52; --accent:#1E4E89;
+      --gold:#F6C445; --gold-dark:#b98513; --text:#F7F7F7;
+    }
+    html,body{margin:0;height:100%;background:#000;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial;color:var(--text)}
+    #ui{position:fixed;inset:0;pointer-events:none}
 
-  .credits{position:absolute;right:12px;bottom:10px;font-size:12px;opacity:.7}
+    /* HUD */
+    .hud{position:absolute;left:12px;top:10px;font-weight:800;text-shadow:0 2px 6px rgba(0,0,0,.35);display:flex;gap:12px;align-items:center;z-index:10}
+    .brand{display:inline-flex;align-items:center;gap:8px;padding:4px 10px;border-radius:999px;background:rgba(30,78,137,.28);border:1px solid rgba(255,255,255,.12)}
+    .brand img{width:18px;height:18px;border-radius:50%}
+    .right{position:absolute;right:12px;top:10px;font-weight:700;opacity:.85}
+    .credits{position:absolute;right:12px;bottom:10px;font-size:12px;opacity:.7}
 
-  /* HUD logo fix (top-left) */
-  .brand b{letter-spacing:.5px}
+    /* Panels */
+    .center{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center}
+    .panel{
+      pointer-events:auto;background:rgba(14,35,65,.92);border:1px solid rgba(255,255,255,.12);border-radius:16px;
+      padding:20px;max-width:640px;box-shadow:0 10px 40px rgba(0,0,0,.40)
+    }
+    .panel h1{margin:6px 0 10px}
+    .panel p{margin:8px 0}
+    .actions{display:flex;gap:10px;justify-content:center;margin-top:12px;flex-wrap:wrap}
+    button{pointer-events:auto;cursor:pointer;border:0;border-radius:12px;padding:12px 18px;font-weight:800}
+    .primary{background:var(--accent);color:#061b2c}
+    .ghost{background:transparent;color:var(--text);border:1px solid rgba(255,255,255,.25)}
+    .muted{opacity:.8}
 
-  /* little pop text */
-  .pop { position:absolute; color:#fff; font-weight:900; text-shadow:0 2px 6px rgba(0,0,0,.5); pointer-events:none; }
-</style>
+    /* Canvas */
+    canvas{display:block;width:100vw;height:100vh;image-rendering:pixelated;background:#000}
+
+    /* Start panel image + coin overlay */
+    .backdrop{
+      background-image:url("./assets/start-panel.png");
+      background-size:cover;background-position:center;border-radius:14px;min-height:190px;margin-bottom:12px;position:relative;
+    }
+    .coin-overlay{
+      position:absolute;right:10px;bottom:-14px;width:86px;height:86px;border-radius:999px;
+      background:radial-gradient( circle at 35% 25%, #ffe39d 0%, #ffd048 35%, #e1a71f 80% );
+      box-shadow:0 6px 22px rgba(0,0,0,.35), inset 0 2px 6px rgba(255,255,255,.35);
+      display:flex;align-items:center;justify-content:center;transform:rotate(-8deg);
+    }
+    .coin-overlay img{width:70%;height:70%;object-fit:contain;filter:drop-shadow(0 2px 4px rgba(0,0,0,.25))}
+  </style>
 </head>
 <body>
-<canvas id="game"></canvas>
+  <!-- Game surface -->
+  <canvas id="game"></canvas>
 
-<div id="ui">
-  <div class="hud">
-    <span class="brand"><img src="../assets/logo.png" alt="WIPE"><b>WIPE</b></span>
-    <span id="score">Score: 0</span>
-    <span id="combo">Combo: x1</span>
-    <span id="lives">Lives: 3</span>
-  </div>
-  <div class="right">Drag / Touch or ← →</div>
+  <!-- UI -->
+  <div id="ui">
+    <div class="hud">
+      <span class="brand">
+        <img src="./assets/logo.png" alt="WIPE" onerror="this.style.display='none'">
+        <b>WIPE</b>
+      </span>
+      <span id="score">Score: 0</span>
+      <span id="combo">Combo: x1</span>
+      <span id="lives">Lives: 3</span>
+    </div>
+    <div class="right">Drag / Touch or ← →</div>
 
-  <div id="start" class="center">
-    <div class="panel">
-      <div class="backdrop">
-        <!-- nice start panel art on top of backdrop (optional) -->
-        <div class="coin-overlay">
-          <img src="assets/start-panel.png" alt="Start Panel">
+    <!-- Start panel -->
+    <div id="start" class="center">
+      <div class="panel">
+        <div class="backdrop">
+          <!-- golden coin overlay -->
+          <span class="coin-overlay"><img src="./assets/coin_gold.png" alt=""></span>
+        </div>
+        <h1>WIPE: Catch the Gains 🧻💰</h1>
+        <p class="muted">Move the TP roll to <b>catch coins</b>. Miss 3 and it’s <i>game over</i>.</p>
+        <div class="actions">
+          <button id="startBtn" class="primary">Start</button>
+          <button id="muteBtn" class="ghost">Sound: Off</button>
         </div>
       </div>
-      <h1>WIPE: Catch the Gains 🧻💰</h1>
-      <p>Move the TP roll to <b>catch coins</b>. Miss 3 and it’s <i>game over</i>.</p>
-      <div class="actions">
-        <button id="startBtn" class="primary">Start</button>
-        <button id="muteBtn" class="ghost">Sound: Off</button>
+    </div>
+
+    <!-- Game Over -->
+    <div id="gameover" class="center" style="display:none;">
+      <div class="panel">
+        <h2>Flushed… 💀</h2>
+        <p id="final"></p>
+        <div class="actions">
+          <button id="again" class="primary">Play Again</button>
+          <button id="share" class="ghost">Share to X</button>
+        </div>
       </div>
     </div>
+
+    <div class="credits">WIPE mini-game</div>
   </div>
 
-  <div id="gameover" class="center" style="display:none;">
-    <div class="panel">
-      <div class="backdrop"></div>
-      <h2>Flushed… 💀</h2>
-      <p id="final"></p>
-      <div class="actions">
-        <button id="again" class="primary">Play Again</button>
-        <button id="share" class="ghost">Share to X</button>
-      </div>
-    </div>
-  </div>
+  <!-- Core game (self-contained; no eval/unsafe CSP tricks) -->
+  <script>
+  (function(){
+    const canvas = document.getElementById('game');
+    const ctx = canvas.getContext('2d', { alpha:false });
+    function fit(){ canvas.width = innerWidth; canvas.height = innerHeight; }
+    addEventListener('resize', fit, {passive:true}); fit();
 
-  <div class="credits">WIPE mini-game</div>
-</div>
+    // UI hooks
+    const $start = document.getElementById('start');
+    const $over  = document.getElementById('gameover');
+    const $startBtn = document.getElementById('startBtn');
+    const $again = document.getElementById('again');
+    const $muteBtn = document.getElementById('muteBtn');
+    const $final = document.getElementById('final');
+    const $score = document.getElementById('score');
+    const $combo = document.getElementById('combo');
+    const $lives = document.getElementById('lives');
 
-<script>
-(()=> {
-  const canvas = document.getElementById('game');
-  const ctx = canvas.getContext('2d', { alpha:false });
-  const $score = document.getElementById('score');
-  const $combo = document.getElementById('combo');
-  const $lives = document.getElementById('lives');
-  const $start = document.getElementById('start');
-  const $startBtn = document.getElementById('startBtn');
-  const $muteBtn = document.getElementById('muteBtn');
-  const $over = document.getElementById('gameover');
-  const $final = document.getElementById('final');
-  const $again = document.getElementById('again');
-  const $share = document.getElementById('share');
+    // Assets (use RELATIVE paths!)
+    const ASSETS = {
+      bg:           new Image(),
+      tp:           new Image(),
+      coinGold:     new Image(),
+      coinDiamond:  new Image(),
+      logo:         new Image()
+    };
+    ASSETS.bg.src          = "./assets/background.png";           // large in-game background
+    ASSETS.tp.src          = "./assets/tp-roll.png";              // nicer catcher
+    ASSETS.coinGold.src    = "./assets/coin_gold.png";
+    ASSETS.coinDiamond.src = "./assets/coin_diamond.png";
+    ASSETS.logo.src        = "./assets/logo.png";
 
-  const C = { bg:'#02172f', gold:'#F6C445', goldDark:'#b98513', text:'#F7F7F7' };
-
-  // --- preload images (coins, tp, bg) ---
-  const img = src => { const i = new Image(); i.src = src; return i; };
-  const goldImg    = img('assets/coin_gold.png');
-  const diamondImg = img('assets/coin_diamond.png');
-  const tpImg      = img('assets/tp-roll.png');
-  const bgImg      = img('assets/backdrop.png'); // used as in-game background, stretched
-
-  // sound
-  let soundOn = false; let audioCtx = null;
-  function beep(freq=880, dur=80, vol=0.06) {
-    if (!soundOn) return;
-    try {
-      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      const t0 = audioCtx.currentTime;
-      const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
-      o.type = 'square'; o.frequency.value = freq;
-      g.gain.value = vol; o.connect(g); g.connect(audioCtx.destination);
-      o.start(t0); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur/1000); o.stop(t0 + dur/1000 + 0.01);
-    } catch {}
-  }
-  $muteBtn.onclick = () => { soundOn = !soundOn; $muteBtn.textContent = 'Sound: ' + (soundOn ? 'On':'Off'); if (soundOn) beep(660,60,0.03); };
-
-  // helpers
-  const rand = (a,b)=>Math.random()*(b-a)+a;
-  const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
-
-  function fit() { canvas.width = innerWidth; canvas.height = innerHeight; }
-  addEventListener('resize', fit, {passive:true}); fit();
-
-  const S = {
-    running:false, over:false, score:0, combo:1, lives:3, best:0,
-    time:0, spawnTimer:0, spawnRate:800, speed:220,
-    coins:[],
-    tp:{ x:canvas.width*0.5, y:canvas.height-90, w:180, h:42 }
-  };
-
-  // small UI popups (+10/+100)
-  const pops = [];
-  function addPop(x,y,text,color) {
-    const el = document.createElement('div');
-    el.className='pop';
-    el.textContent = text;
-    el.style.left = x + 'px';
-    el.style.top  = y + 'px';
-    el.style.color = color || '#fff';
-    el.style.fontSize = '18px';
-    el.style.transform = 'translate(-50%,-50%)';
-    el.style.opacity = '1';
-    document.body.appendChild(el);
-    const t0 = performance.now();
-    (function anim(t){
-      const k = (t - t0)/700;
-      if (k>=1) { el.remove(); return; }
-      el.style.transform = `translate(-50%, calc(-50% - ${k*28}px))`;
-      el.style.opacity = (1-k).toFixed(2);
-      requestAnimationFrame(anim);
-    })(performance.now());
-  }
-
-  // tiny screen shake for diamonds
-  let shakeT=0, shakeMag=0;
-  function shake(mag=6, ms=160){ shakeMag=mag; shakeT=ms; }
-
-  function reset(){
-    S.score=0; S.combo=1; S.lives=3; S.coins.length=0; S.time=0; S.spawnTimer=0; S.spawnRate=800; S.speed=220;
-    S.tp.x = canvas.width/2;
-  }
-  function start(){
-    reset(); S.running=true; S.over=false;
-    $start.style.display='none'; $over.style.display='none';
-    last=performance.now(); requestAnimationFrame(loop);
-  }
-  function over(){
-    S.running=false; S.over=true; S.best=Math.max(S.best,S.score);
-    $final.textContent = `Score: ${S.score}  •  Best: ${S.best}`;
-    $over.style.display='flex';
-
-    // dispatch event for leaderboard hook (your leaderboard.js listens for this)
-    document.dispatchEvent(new CustomEvent('WIPE:score', { detail: { score: S.score, best: S.best, ts: Date.now() }}));
-  }
-
-  $startBtn.onclick = start; $again.onclick = start;
-  $share.onclick = () => {
-    const text = `I scored ${S.score} in WIPE: Catch the Gains 🧻💰 — can you beat me? #WIPEcoin`;
-    const url = location.origin + location.pathname;
-    const u = new URL('https://twitter.com/intent/tweet');
-    u.searchParams.set('text', text); u.searchParams.set('url', url);
-    window.open(u.toString(), '_blank');
-  };
-
-  // input
-  let dragging=false, dragOffset=0;
-  canvas.addEventListener('pointerdown', e=>{ dragging=true; dragOffset = clamp(e.clientX - S.tp.x, -S.tp.w/2, S.tp.w/2); });
-  addEventListener('pointermove', e=>{ if (!dragging) return; S.tp.x = clamp(e.clientX - dragOffset, S.tp.w/2, canvas.width - S.tp.w/2); });
-  addEventListener('pointerup', ()=> dragging=false);
-  const keys={}; addEventListener('keydown', e=>keys[e.key]=true); addEventListener('keyup', e=>keys[e.key]=false);
-
-  function spawn(){
-    const rare = Math.random() < 0.12; // 12% diamond
-    S.coins.push({
-      x: rand(40, canvas.width-40),
-      y: -30,
-      r: rare? 26:22,
-      v: S.speed*(rare?.95:1),
-      type: rare? 'diamond':'gold',
-      rot: rand(0, Math.PI*2)
+    // simple loader wait (avoid race)
+    let loaded = 0, needed = Object.keys(ASSETS).length;
+    Object.values(ASSETS).forEach(img=>{
+      img.addEventListener('load', ()=>{ loaded++; });
+      img.addEventListener('error', ()=>{ loaded++; }); // don't block if one misses
     });
-  }
-  function collide(c,tp){
-    const cx = clamp(c.x, tp.x - tp.w/2, tp.x + tp.w/2);
-    const cy = clamp(c.y, tp.y - tp.h/2, tp.y + tp.h/2);
-    const dx=c.x-cx, dy=c.y-cy; return dx*dx+dy*dy <= c.r*c.r;
-  }
 
-  function drawTP(tp){
-    const {x,y,w,h}=tp;
-    if (tpImg.complete && tpImg.naturalWidth){
-      const scaleH = h / tpImg.naturalHeight;
-      const drawW = tpImg.naturalWidth * scaleH;
-      ctx.drawImage(tpImg, x - drawW/2, y - h/2, drawW, h);
-    } else {
-      // fallback rectangle
-      const r=18;
+    // SFX (no eval, no inline strings)
+    let soundOn = false; let audioCtx=null;
+    function blip(freq=880, dur=0.08, vol=0.05){
+      if(!soundOn) return;
+      try{
+        if(!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+        const t = audioCtx.currentTime;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = "square"; osc.frequency.value = freq;
+        gain.gain.value = vol;
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(t);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+        osc.stop(t + dur + 0.01);
+      }catch{}
+    }
+    $muteBtn.onclick = () => { soundOn = !soundOn; $muteBtn.textContent = "Sound: " + (soundOn?"On":"Off"); if(soundOn) blip(720, .06, .04); };
+
+    // Game state
+    const S = {
+      running:false, time:0,
+      score:0, combo:1, lives:3, best:0,
+      spawnTimer:0, spawnRate:800, speed:220,
+      coins:[],
+      tp:{ x: innerWidth*0.5, y: innerHeight-100, w:180, h:50 }
+    };
+
+    function reset(){
+      S.time=0; S.score=0; S.combo=1; S.lives=3;
+      S.spawnTimer=0; S.spawnRate=800; S.speed=220;
+      S.coins.length=0;
+      S.tp.x = innerWidth*0.5;
+    }
+
+    function start(){
+      if(loaded < needed){ /* wait one frame more */ requestAnimationFrame(start); return; }
+      reset();
+      S.running = true;
+      $start.style.display = 'none';
+      $over.style.display = 'none';
+      last = performance.now();
+      requestAnimationFrame(loop);
+    }
+
+    function gameOver(){
+      S.running = false;
+      S.best = Math.max(S.best, S.score);
+      $final.textContent = `Score: ${S.score}  •  Best: ${S.best}`;
+      $over.style.display = 'flex';
+
+      // Dispatch event for leaderboard.js (if present)
+      try{
+        const ev = new CustomEvent("wipe:run-finished",{detail:{score:S.score, combo:S.combo, lives:S.lives}});
+        window.dispatchEvent(ev);
+      }catch{}
+    }
+
+    // Controls
+    $startBtn.onclick = start;
+    $again.onclick = start;
+
+    let dragging=false, dragOffset=0;
+    canvas.addEventListener('pointerdown', e=>{ dragging=true; dragOffset = Math.max(-S.tp.w/2, Math.min(S.tp.w/2, e.clientX - S.tp.x)); });
+    addEventListener('pointermove', e=>{ if(!dragging) return; S.tp.x = Math.max(S.tp.w/2, Math.min(canvas.width - S.tp.w/2, e.clientX - dragOffset)); });
+    addEventListener('pointerup', ()=> dragging=false);
+    const keys={}; addEventListener('keydown', e=>keys[e.key]=true); addEventListener('keyup', e=>keys[e.key]=false);
+
+    // Helpers
+    const rand=(a,b)=>Math.random()*(b-a)+a;
+    const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+    function collide(c,tp){
+      const cx = clamp(c.x, tp.x - tp.w/2, tp.x + tp.w/2);
+      const cy = clamp(c.y, tp.y - tp.h/2, tp.y + tp.h/2);
+      const dx=c.x-cx, dy=c.y-cy;
+      return dx*dx+dy*dy <= c.r*c.r;
+    }
+
+    // Coins
+    function spawn(){
+      const rare = Math.random() < 0.12; // ~12% diamonds
+      S.coins.push({
+        x: rand(40, canvas.width-40),
+        y: -30,
+        r: rare? 24:18,
+        v: S.speed*(rare? .95:1),
+        type: rare? 'diamond':'gold',
+        rot: rand(0, Math.PI*2),
+        vx: rand(-10,10)
+      });
+    }
+
+    // Visual FX (sparkles + floater)
+    const fx = [];
+    function sparkle(x,y){
+      for(let i=0;i<10;i++){
+        fx.push({t:'p',x,y, vx:rand(-60,60), vy:rand(-140,-60), a:1, r:2+Math.random()*2});
+      }
+    }
+    function popup(x,y,text,color){
+      fx.push({t:'txt',x,y,vy:-40,a:1,text,color});
+    }
+
+    // Render helpers
+    function drawBG(){
+      if(ASSETS.bg.complete && ASSETS.bg.naturalWidth){
+        const iw = ASSETS.bg.width, ih = ASSETS.bg.height;
+        const scale = Math.max(canvas.width/iw, canvas.height/ih);
+        const w = iw*scale, h = ih*scale;
+        const x = (canvas.width - w)/2, y = (canvas.height - h)/2;
+        ctx.drawImage(ASSETS.bg, x, y, w, h);
+        ctx.fillStyle = "rgba(0,0,0,.20)"; ctx.fillRect(0,0,canvas.width,canvas.height); // subtle darken
+      } else {
+        ctx.fillStyle = "#0E2341"; ctx.fillRect(0,0,canvas.width,canvas.height);
+      }
+    }
+    function drawTP(tp){
+      const {x,y,w,h}=tp;
       ctx.save(); ctx.translate(x,y);
-      ctx.fillStyle='#f1f4f8'; ctx.strokeStyle='rgba(0,0,0,.25)'; ctx.lineWidth=2;
-      ctx.beginPath(); roundRectPath(ctx, -w/2,-h/2,w,h,r); ctx.fill(); ctx.stroke();
-      ctx.fillStyle='#b8894d'; ctx.beginPath(); ctx.ellipse(-w*0.35,0,14,14,0,0,Math.PI*2); ctx.fill();
-      ctx.fillStyle='rgba(30,78,137,.70)'; ctx.font='900 18px system-ui'; ctx.textAlign='center'; ctx.fillText('WIPE',0,6);
+      if(ASSETS.tp.complete && ASSETS.tp.naturalWidth){
+        const scale = h / ASSETS.tp.height;
+        ctx.drawImage(ASSETS.tp, -w/2, -h/2, ASSETS.tp.width*scale, ASSETS.tp.height*scale);
+      }else{
+        const r=18; ctx.fillStyle='#f1f4f8'; ctx.strokeStyle='rgba(0,0,0,.25)'; ctx.lineWidth=2;
+        ctx.beginPath(); ctx.roundRect(-w/2,-h/2,w,h,r); ctx.fill(); ctx.stroke();
+      }
       ctx.restore();
     }
-  }
-  function roundRectPath(ctx,x,y,w,h,r){ ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); }
-
-  function drawCoin(c){
-    ctx.save(); ctx.translate(c.x,c.y); ctx.rotate(c.rot);
-    if (c.type==='diamond'){
-      if (diamondImg.complete && diamondImg.naturalWidth){
-        const size = c.r*2;
-        ctx.drawImage(diamondImg, -size/2, -size/2, size, size);
+    function drawCoin(c){
+      ctx.save(); ctx.translate(c.x,c.y); ctx.rotate(c.rot);
+      const img = c.type==='diamond' ? ASSETS.coinDiamond : ASSETS.coinGold;
+      if(img.complete && img.naturalWidth){
+        const d = c.r*2;
+        ctx.drawImage(img, -d/2, -d/2, d, d);
       } else {
-        // fallback diamond vector
-        ctx.fillStyle = '#b6f0ff'; ctx.strokeStyle = '#88d7ea'; ctx.lineWidth=3;
-        ctx.beginPath(); ctx.moveTo(0,-c.r); ctx.lineTo(c.r*0.9,0); ctx.lineTo(0,c.r); ctx.lineTo(-c.r*0.9,0); ctx.closePath();
-        ctx.fill(); ctx.stroke();
+        // fallback shapes
+        if(c.type==='diamond'){
+          ctx.fillStyle = '#9ee6ff'; ctx.strokeStyle = '#5fbcd3'; ctx.lineWidth=3;
+          ctx.beginPath(); ctx.moveTo(0,-c.r); ctx.lineTo(c.r*0.9,0); ctx.lineTo(0,c.r); ctx.lineTo(-c.r*0.9,0); ctx.closePath(); ctx.fill(); ctx.stroke();
+        }else{
+          ctx.fillStyle = '#ffd24c'; ctx.strokeStyle = '#b98513'; ctx.lineWidth=3;
+          ctx.beginPath(); ctx.arc(0,0,c.r,0,Math.PI*2); ctx.fill(); ctx.stroke();
+        }
       }
-    } else {
-      if (goldImg.complete && goldImg.naturalWidth){
-        const size = c.r*2;
-        ctx.drawImage(goldImg, -size/2, -size/2, size, size);
-      } else {
-        // fallback gold coin
-        const grad = ctx.createRadialGradient(-5,-5,4,0,0,c.r+6);
-        grad.addColorStop(0,'#fff5b2'); grad.addColorStop(1, C.gold);
-        ctx.fillStyle = grad; ctx.strokeStyle = C.goldDark; ctx.lineWidth=3;
-        ctx.beginPath(); ctx.arc(0,0,c.r,0,Math.PI*2); ctx.fill(); ctx.stroke();
-      }
-    }
-    ctx.restore();
-  }
-
-  let last=0;
-  function loop(t){
-    if (!S.running) return;
-    const dt = Math.min(32, t-last)/1000; last=t;
-    S.time += dt; S.spawnTimer += dt*1000;
-    S.speed += dt*6; S.spawnRate = Math.max(260, S.spawnRate - dt*8);
-    if (S.spawnTimer > S.spawnRate){ S.spawnTimer = 0; spawn(); }
-    if (keys['ArrowLeft']||keys['a']) S.tp.x -= 420*dt;
-    if (keys['ArrowRight']||keys['d']) S.tp.x += 420*dt;
-    S.tp.x = clamp(S.tp.x, S.tp.w/2, canvas.width - S.tp.w/2);
-
-    // advance coins
-    for (let i=S.coins.length-1;i>=0;i--){
-      const c = S.coins[i];
-      c.y += c.v*dt; c.rot += (c.type==='diamond'?2.2:1.4)*dt;
-      if (collide(c,S.tp)){
-        const gained=(c.type==='diamond'?100:10) * S.combo;
-        S.score+=gained; S.combo=Math.min(10,S.combo+1);
-        if (c.type==='diamond') { shake(6,160); addPop(c.x, c.y, '+100', '#8ef3ff'); if (soundOn) beep(1180,110); }
-        else { addPop(c.x, c.y, '+10', '#ffe08a'); if (soundOn) beep(820,70); }
-        S.coins.splice(i,1);
-      } else if (c.y - c.r > canvas.height){
-        S.lives -= 1; S.combo=1; S.coins.splice(i,1);
-        if (soundOn) beep(220,120);
-        if (S.lives<=0) over();
-      }
-    }
-
-    // draw background (image if available)
-    if (bgImg.complete && bgImg.naturalWidth){
-      // parallax-ish slow drift
-      const driftX = Math.sin(S.time*0.07) * 8;
-      const driftY = Math.cos(S.time*0.05) * 6;
-      ctx.drawImage(bgImg, -20 + driftX, -20 + driftY, canvas.width+40, canvas.height+40);
-    } else {
-      // fallback starry pattern
-      ctx.fillStyle=C.bg; ctx.fillRect(0,0,canvas.width,canvas.height);
-      ctx.save(); ctx.globalAlpha=.12; for (let i=0;i<60;i++){ const x=(i*97)%canvas.width, y=(i*53)%canvas.height; ctx.fillStyle=i%7?'#ffffff':'#a7d0ff'; ctx.fillRect(x,y,2,2);} ctx.restore();
-    }
-
-    // apply screen shake
-    if (shakeT>0){
-      shakeT -= dt*1000;
-      const k = Math.max(0, shakeT)/160;
-      ctx.save();
-      ctx.translate((Math.random()-0.5)*shakeMag*k, (Math.random()-0.5)*shakeMag*k);
-      S.coins.forEach(drawCoin); drawTP(S.tp);
       ctx.restore();
-    } else {
-      S.coins.forEach(drawCoin); drawTP(S.tp);
     }
 
-    // ground line
-    ctx.fillStyle='rgba(0,0,0,.15)'; ctx.fillRect(0, canvas.height-6, canvas.width, 6);
+    // Loop
+    let last=0;
+    function loop(t){
+      if(!S.running) return;
+      const dt = Math.min(32, t-last)/1000; last=t;
+      S.time += dt; S.spawnTimer += dt*1000; S.speed += dt*6; S.spawnRate = Math.max(260, S.spawnRate - dt*8);
+      if(S.spawnTimer > S.spawnRate){ S.spawnTimer = 0; spawn(); }
+      if(keys['ArrowLeft']||keys['a']) S.tp.x -= 420*dt;
+      if(keys['ArrowRight']||keys['d']) S.tp.x += 420*dt;
+      S.tp.x = clamp(S.tp.x, S.tp.w/2, canvas.width - S.tp.w/2);
 
-    $score.textContent = `Score: ${S.score}`;
-    $combo.textContent = `Combo: x${S.combo}`;
-    $lives.textContent = `Lives: ${S.lives}`;
+      // update coins
+      for(let i=S.coins.length-1;i>=0;i--){
+        const c = S.coins[i];
+        c.y += c.v*dt; c.x += c.vx*dt; c.rot += (c.type==='diamond'?2.0:1.3)*dt;
+        if(collide(c,S.tp)){
+          const gain = (c.type==='diamond'?100:10)*S.combo;
+          S.score += gain; S.combo = Math.min(10, S.combo+1);
+          blip(c.type==='diamond'?1200:880, .07, .05);
+          // FX
+          if(c.type==='diamond'){ sparkle(c.x,c.y); popup(c.x,c.y-22,'+100','#9ee6ff'); } else { popup(c.x,c.y-18,'+10','#ffd24c'); }
+          S.coins.splice(i,1);
+        } else if (c.y - c.r > canvas.height){
+          S.lives -= 1; S.combo = 1; S.coins.splice(i,1); blip(220,.12,.05);
+          if(S.lives<=0) { gameOver(); }
+        }
+      }
 
-    requestAnimationFrame(loop);
-  }
-})();
-</script>
+      // update fx
+      for(let i=fx.length-1;i>=0;i--){
+        const f = fx[i];
+        if(f.t==='p'){
+          f.x += f.vx*dt; f.y += f.vy*dt; f.vy += 220*dt; f.a -= 1.2*dt;
+          if(f.a<=0) fx.splice(i,1);
+        } else if(f.t==='txt'){
+          f.y += f.vy*dt; f.a -= 1.2*dt;
+          if(f.a<=0) fx.splice(i,1);
+        }
+      }
 
-<link rel="stylesheet" href="js/leaderboard.css">
-<div id="wipe-leader"></div>
-<script src="js/leaderboard.js"></script>
-<script src="js/effects.js"></script>
+      // draw
+      drawBG();
+      // ground line
+      ctx.fillStyle='rgba(0,0,0,.15)'; ctx.fillRect(0, canvas.height-6, canvas.width, 6);
+      // coins
+      S.coins.forEach(drawCoin);
+      // tp
+      drawTP(S.tp);
+      // fx
+      fx.forEach(f=>{
+        if(f.t==='p'){ ctx.globalAlpha = Math.max(0,f.a); ctx.fillStyle='#fffad1'; ctx.beginPath(); ctx.arc(f.x,f.y,f.r,0,Math.PI*2); ctx.fill(); ctx.globalAlpha=1; }
+        else { ctx.globalAlpha = Math.max(0,f.a); ctx.fillStyle=f.color||'#fff'; ctx.font='bold 16px system-ui'; ctx.textAlign='center'; ctx.fillText(f.text, f.x, f.y); ctx.globalAlpha=1; }
+      });
+
+      // HUD
+      $score.textContent = `Score: ${S.score}`;
+      $combo.textContent = `Combo: x${S.combo}`;
+      $lives.textContent = `Lives: ${S.lives}`;
+
+      requestAnimationFrame(loop);
+    }
+
+    // X share
+    document.getElementById('share').onclick = ()=>{
+      const text = `I scored ${S.score} in WIPE: Catch the Gains 🧻💰 — can you beat me? #WIPEcoin`;
+      const url = location.origin + '/game';
+      const u = new URL('https://twitter.com/intent/tweet');
+      u.searchParams.set('text', text); u.searchParams.set('url', url);
+      window.open(u.toString(), '_blank','noopener');
+    };
+  })();
+  </script>
+
+  <!-- OPTIONAL modules (load if present; safe paths) -->
+  <link rel="stylesheet" href="./js/leaderboard.css">
+  <div id="wipe-leader"></div>
+  <script src="./js/leaderboard.js"></script>
+  <script src="./js/effects.js"></script>
 </body>
 </html>

@@ -28,3 +28,16 @@
 .wl-modal-actions{ display:flex; gap:10px; justify-content:flex-end; }
 .wl-primary{ background:#1E4E89; color:#061b2c; border-color:transparent; }
 .wl-primary:hover{ filter:brightness(1.1); }
+/* public/game/js/leaderboard.css */
+.wipe-lb{background:rgba(14,35,65,.85);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:14px 16px;margin:16px auto;max-width:560px}
+.wipe-lb__title{margin:0 0 8px;font:800 18px/1.2 system-ui;color:#F6C445;text-shadow:0 0 8px rgba(246,196,69,.6)}
+.wipe-lb__list{list-style:none;margin:0;padding:0}
+.wipe-lb__item{display:grid;grid-template-columns:36px 1fr auto auto;gap:8px;align-items:center;padding:6px 0;border-bottom:1px dashed rgba(255,255,255,.08)}
+.wipe-lb__item:last-child{border-bottom:0}
+.wipe-lb__rank{opacity:.7;font-weight:700}
+.wipe-lb__name{font-weight:700}
+.wipe-lb__score{font-weight:900}
+.wipe-lb__time{opacity:.6;font-size:12px}
+.wipe-lb__me{display:flex;justify-content:space-between;align-items:center;margin-top:10px;gap:12px;flex-wrap:wrap}
+.wipe-btn{cursor:pointer;border:1px solid rgba(255,255,255,.18);background:rgba(30,78,137,.35);color:#fff;padding:8px 12px;border-radius:10px;font-weight:800}
+.wipe-btn--ghost{background:transparent}
