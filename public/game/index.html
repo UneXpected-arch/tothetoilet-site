@@ -3,8 +3,12 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+
+<!-- 👇 Force all relative URLs to resolve under /game/ -->
+<base href="/game/">
+
 <title>WIPE: Catch The Gains</title>
-<link rel="icon" href="./assets/favicon.png" type="image/png" />
+<link rel="icon" href="assets/favicon.png" type="image/png" />
 
 <style>
   :root{
@@ -15,10 +19,10 @@
     font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial}
   #stage{
     position:fixed; inset:0; overflow:hidden;
-    background:#0b223f url("./assets/bg-desktop.jpg") center/cover no-repeat;
+    background:#0b223f url("assets/bg-desktop.jpg") center/cover no-repeat;
   }
   @media (max-width: 900px){
-    #stage{ background-image:url("./assets/bg-mobile.jpg"); }
+    #stage{ background-image:url("assets/bg-mobile.jpg"); }
   }
   #game{ position:fixed; inset:0; width:100vw; height:100vh; display:block; }
 
@@ -45,10 +49,10 @@
   .hero{
     width:100%;
     aspect-ratio: 16 / 9;
-    background: url("./assets/start-hero-desktop.png") center/cover no-repeat;
+    background: url("assets/start-hero-desktop.png") center/cover no-repeat;
   }
   @media (max-width: 900px){
-    .hero{ background-image:url("./assets/start-hero-mobile.png"); aspect-ratio: 1.6 / 1; }
+    .hero{ background-image:url("assets/start-hero-mobile.png"); aspect-ratio: 1.6 / 1; }
   }
   .copy{ padding:18px clamp(16px, 4vw, 26px) 22px; }
   h1{ margin:0 0 10px; font-size:clamp(22px, 4.8vw, 34px); }
@@ -58,10 +62,8 @@
   .primary{ background:var(--accent); color:#061b2c }
   .ghost{ background:transparent; color:var(--text); border:1px solid rgba(255,255,255,.25) }
 
-  #over{
-    position:fixed; inset:0; display:none; align-items:center; justify-content:center; z-index:6;
-    padding: clamp(10px, 3vw, 24px);
-  }
+  #over{ position:fixed; inset:0; display:none; align-items:center; justify-content:center; z-index:6;
+         padding: clamp(10px, 3vw, 24px); }
   .panel.small{ width:min(720px, 92vw) }
 
   body, #stage { overscroll-behavior: none; }
@@ -72,7 +74,7 @@
 
   <div class="hud">
     <span class="brand">
-      <img src="./assets/logo.png" alt="WIPE"/><b>WIPE</b>
+      <img src="assets/logo.png" alt="WIPE"/><b>WIPE</b>
     </span>
     <span id="score">Score: 0</span>
     <span id="combo">Combo: x1</span>
@@ -124,11 +126,11 @@
   const $again = document.getElementById('again');
   const $share = document.getElementById('share');
 
-  // *** KEY FIX: relative paths begin with "./"
+  // With <base href="/game/"> these resolve to /game/assets/...
   const IMGS = {
-    tp: './assets/tp-roll.png',
-    gold: './assets/coin_gold.png',
-    dia: './assets/coin_diamond.png'
+    tp: 'assets/tp-roll.png',
+    gold: 'assets/coin_gold.png',
+    dia: 'assets/coin_diamond.png'
   };
   const imgs = {};
   for (const k in IMGS){ const i=new Image(); i.src=IMGS[k]; imgs[k]=i; }
